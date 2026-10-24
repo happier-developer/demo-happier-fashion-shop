@@ -13,6 +13,7 @@ import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
 import SmokeFlowHeroBackground from "@/components/home/SmokeFlowHeroBackground";
+import CollectionSections from "@/components/home/CollectionSections";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
 import { formatVnd } from "@/lib/format";
@@ -247,6 +248,26 @@ export default function HomePage() {
           </Suspense>
         </Container>
       </section>
+
+      {/* ---------- Bộ sưu tập theo mùa (Xuân → Hạ → Thu → Đông) ----------
+          Mỗi bộ sưu tập: 1 hero full-screen + lưới 10 sản phẩm thật từ DB
+          (xem src/components/home/CollectionSections.tsx). */}
+      <Suspense
+        fallback={
+          <Container>
+            <div
+              aria-hidden
+              className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 lg:grid-cols-3"
+            >
+              {Array.from({ length: 6 }).map((_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
+            </div>
+          </Container>
+        }
+      >
+        <CollectionSections />
+      </Suspense>
 
       {/* ---------- Giới thiệu ngắn (DESIGN.md v2: câu statement serif lớn) ---------- */}
       <section className="mt-16 border-y border-line bg-surface md:mt-20">
