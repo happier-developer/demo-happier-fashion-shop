@@ -196,22 +196,16 @@ body {
 }
 
 /* Hiệu ứng hover Editorial (HAP-45): tinh tế, chỉ transform /
-   shadow / color / opacity — không đổi width/height/margin nên không
+   color / opacity — không đổi width/height/margin nên không
    gây layout shift. Toàn bộ khối nằm trong @media (hover: hover)
    nên thiết bị cảm ứng không bị dính trạng thái hover; khối
    prefers-reduced-motion ở trên đã rút mọi transition về ~0ms nên
    người dùng bật giảm chuyển động cũng không thấy motion thừa.
    Hiệu ứng hover màu đơn giản đã có sẵn từ trước (hover:text-cta,
    hover:bg-ink...) được giữ nguyên — khối này chỉ thêm các hiệu ứng
-   mới: nâng thẻ, zoom ảnh, sweep gạch chân, hiện mờ action phụ. */
+   mới: nâng thẻ, sweep gạch chân, hiện mờ action phụ. */
 .product-card {
-  transition:
-    transform 300ms ease-out,
-    box-shadow 300ms ease-out;
-}
-
-.product-card-image {
-  transition: transform 400ms ease-out;
+  transition: transform 300ms ease-out;
 }
 
 .quick-view-btn {
@@ -241,7 +235,6 @@ body {
 .btn-lift {
   transition:
     transform 300ms ease-out,
-    box-shadow 300ms ease-out,
     background-color 300ms ease-out,
     color 300ms ease-out,
     border-color 300ms ease-out;
@@ -262,15 +255,9 @@ body {
 }
 
 @media (hover: hover) {
-  /* Thẻ sản phẩm: nâng nhẹ + bóng mềm; ảnh zoom chậm trong khung
-     overflow-hidden nên không tràn; nút xem nhanh hiện mờ dần. */
+  /* Thẻ sản phẩm: nâng nhẹ; nút xem nhanh hiện mờ dần. */
   .product-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 16px 32px rgb(17 17 17 / 0.1);
-  }
-
-  .product-card:hover .product-card-image {
-    transform: scale(1.05);
   }
 
   .product-card:hover .quick-view-btn {
@@ -283,13 +270,11 @@ body {
     transform: scaleX(1);
   }
 
-  /* Nút/CTA: nâng rõ + bóng mềm đậm hơn để nhìn thấy được trên nền
-     trắng trong ảnh chụp tĩnh; nút đen đã tối đa nên không đổi màu nền.
+  /* Nút/CTA: nâng rõ; nút đen đã tối đa nên không đổi màu nền.
      press-scale (active:scale) và ripple giữ nguyên vì chúng dùng thuộc
      tính scale / phần tử riêng, không xung đột với transform. */
   .btn-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgb(17 17 17 / 0.18);
   }
 
   /* Ảnh hero trang chủ: zoom nhẹ, chậm (tăng từ 1.03 để phân biệt được
