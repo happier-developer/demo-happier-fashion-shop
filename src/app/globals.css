@@ -106,3 +106,12 @@ body {
   }
 }
 
+
+/* Editorial serif override (font fix 2026-10-24): unlayered rule, placed
+   last so it beats layered Tailwind utilities in the cascade. Forces
+   .font-display elements to resolve Playfair Display directly instead of
+   going through the --font-display theme variable chain. */
+.font-display {
+  font-family: "Playfair Display", "Playfair Display Fallback", Georgia,
+    "Times New Roman", serif;
+}
