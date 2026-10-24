@@ -269,9 +269,13 @@ export default function ImageLightbox({
       <div
         ref={stageRef}
         className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden"
-        onClick={(event) => event.stopPropagation()}
       >
         <div
+          // Chỉ ảnh mới chặn click lan ra overlay: click vào vùng tối
+          // quanh ảnh phải nổi bọt lên root để đóng lightbox (lỗi cũ:
+          // stage và dòng gợi ý chặn propagation nên hầu hết click ngoài
+          // ảnh đều bị nuốt, chỉ còn vùng chữ toolbar là đóng được).
+          onClick={(event) => event.stopPropagation()}
           className={`relative aspect-[3/4] h-full max-h-full max-w-[92vw] ${
             view.scale > MIN_SCALE
               ? dragging
@@ -302,10 +306,7 @@ export default function ImageLightbox({
         </div>
       </div>
 
-      <p
-        className="px-4 py-3 text-center text-xs text-white/60"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <p className="px-4 py-3 text-center text-xs text-white/60">
         Cuộn chuột hoặc bấm + / − để phóng to · Bấm vào ảnh để chuyển đổi
         zoom · Kéo để di chuyển khi đã phóng to · ESC để đóng
       </p>
