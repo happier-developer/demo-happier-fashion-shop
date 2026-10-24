@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -122,8 +123,10 @@ export default async function ProductDetailPage({
       </Link>
 
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
-        {/* Ảnh lớn bên trái */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-line/40">
+        {/* Ảnh lớn bên trái — đích morph của ảnh thẻ cùng slug
+            (click effect v2.3); fade-in làm hiệu ứng vào trang khi
+            trình duyệt không hỗ trợ View Transitions. */}
+        <div className="animate-fade-in relative aspect-[3/4] overflow-hidden bg-line/40">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -132,6 +135,11 @@ export default async function ProductDetailPage({
               priority
               fetchPriority="high"
               sizes="(max-width: 1024px) 100vw, 50vw"
+              style={
+                {
+                  viewTransitionName: `product-hero-${product.slug}`,
+                } as CSSProperties
+              }
               className={`object-cover ${
                 product.isAvailable ? "" : "grayscale"
               }`}

@@ -137,6 +137,64 @@ body {
 }
 
 
+/* Click effects v2.3 (2026-10-24):
+   - Ripple lan từ điểm chạm: span .ripple-dot do RippleHandler gắn tạm
+     vào phần tử [data-ripple] (Button chuẩn, nút Thêm vào giỏ, link CTA);
+     nút phải có relative + overflow-hidden để sóng không tràn.
+   - Tia hạt mực bung khi thêm giỏ: span .burst-dot trong AddToCartButton,
+     bay tỏa ra theo góc --burst-angle rồi tan dần.
+   - Morph ảnh thẻ → ảnh hero trang chi tiết: View Transitions API
+     (MorphNavHandler), tên transition theo slug; nhịp transition chuẩn
+     350ms. Tất cả chỉ animate opacity/transform, không gây layout shift.
+   Khối prefers-reduced-motion ở trên rút animation về ~0ms nên các hiệu
+   ứng này tự tắt với người dùng bật giảm chuyển động. */
+.ripple-dot {
+  position: absolute;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.22;
+  transform: scale(0);
+  animation: ripple-spread 650ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes ripple-spread {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.burst-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--color-ink);
+  pointer-events: none;
+  animation: burst-dot-fly 700ms var(--ease-standard) forwards;
+}
+
+@keyframes burst-dot-fly {
+  from {
+    transform: translate(-50%, -50%) rotate(var(--burst-angle))
+      translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(var(--burst-angle))
+      translateY(-30px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+::view-transition-group(*) {
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
 /* Editorial serif override (font fix 2026-10-24): unlayered rule, placed
    last so it beats layered Tailwind utilities in the cascade. Forces
    .font-display elements to resolve Playfair Display directly instead of

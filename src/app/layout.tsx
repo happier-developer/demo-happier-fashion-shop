@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { aboutContent, shopConfig, siteUrl } from "@/lib/config";
+import RippleHandler from "@/components/ui/RippleHandler";
+import MorphNavHandler from "@/components/ui/MorphNavHandler";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["vietnamese", "latin"],
@@ -59,7 +61,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={`${beVietnamPro.variable} ${playfairDisplay.variable} antialiased`}>{children}</body>
+      <body className={`${beVietnamPro.variable} ${playfairDisplay.variable} antialiased`}>
+        {children}
+        <RippleHandler />
+        <MorphNavHandler />
+      </body>
     </html>
   );
 }

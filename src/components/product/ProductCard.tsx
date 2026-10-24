@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { Shirt } from "lucide-react";
 import type { Product } from "@/lib/db/schema";
 import {
@@ -10,6 +11,7 @@ import {
 import { formatVnd } from "@/lib/format";
 import AddToCartButton from "./AddToCartButton";
 import FavoriteButton from "./FavoriteButton";
+import QuickViewButton from "./QuickViewButton";
 
 // ProductCard theo DESIGN.md v2 — Editorial: ảnh dọc 3:4 kiểu lookbook,
 // không viền/bo góc, tên serif, giá màu ink, nút gần vuông; sản phẩm hết hàng:
@@ -44,6 +46,7 @@ export default function ProductCard({
       <div className="relative">
         <Link
           href={detailHref}
+          data-morph
           className="relative block aspect-[3/4] overflow-hidden bg-line/40"
           aria-label={product.name}
         >
@@ -53,6 +56,13 @@ export default function ProductCard({
               alt={product.name}
               fill
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
+              // Tên transition morph sang ảnh hero trang chi tiết cùng
+              // slug (click effect v2.3, MorphNavHandler).
+              style={
+                {
+                  viewTransitionName: `product-hero-${product.slug}`,
+                } as CSSProperties
+              }
               className={`object-cover transition duration-300 group-hover:scale-105 ${
                 inStock ? "" : "grayscale"
               }`}
@@ -74,11 +84,13 @@ export default function ProductCard({
           )}
         </Link>
         <FavoriteButton slug={product.slug} name={product.name} />
+        <QuickViewButton product={product} />
       </div>
 
       <div className="flex flex-1 flex-col gap-2 pt-4">
         <Link
           href={detailHref}
+          data-morph
           className="font-display line-clamp-1 text-lg font-semibold text-ink transition hover:text-cta"
         >
           {product.name}
@@ -93,7 +105,9 @@ export default function ProductCard({
           {hasVariants ? (
             <Link
               href={detailHref}
-              className="inline-flex items-center justify-center gap-1.5 rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink"
+              data-morph
+              data-ripple
+              className="relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink"
             >
               Chọn size / màu
             </Link>
