@@ -1,15 +1,19 @@
 "use client";
 
-// Header storefront theo DESIGN.md mục 5: cố định trên cùng (sticky), nền
-// paper mờ, logo trái, sản phẩm giữa, giỏ hàng + tài khoản phải.
-// Trạng thái active của sản phẩm theo pathname hiện tại; trên mobile dùng sản phẩm
-// hamburger mở/đóng được (có aria-expanded, đóng khi chọn mục hoặc đổi trang).
+// Header storefront dạng MASTHEAD tạp chí (khác hẳn cấu trúc thanh đơn
+// một hàng của Happier Coffee): 3 tầng riêng biệt — dải tiện ích, dòng
+// masthead với wordmark serif căn giữa, và hàng điều hướng dính (sticky)
+// với vạch hairline ngăn cách các mục. Masthead cuộn đi, chỉ hàng nav
+// dính lại trên cùng.
+// Trạng thái active của điều hướng theo pathname hiện tại; trên mobile
+// dùng nút menu mở/đóng được (có aria-expanded, đóng khi chọn mục hoặc
+// đổi trang). Badge giỏ, nhãn tài khoản và link Quản trị (chỉ admin)
+// giữ nguyên logic hiển thị của bản cũ — chỉ đổi vị trí trình bày.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Shirt,
   LayoutDashboard,
   Menu as MenuIcon,
   ShoppingCart,
@@ -57,13 +61,46 @@ function NavLink({
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`px-3 py-2 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
+      className={`px-5 py-3 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
         active
           ? "font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
           : "text-muted hover:text-ink"
       }`}
     >
       {label}
+    </Link>
+  );
+}
+
+/** Nút giỏ hàng dùng chung cho dải tiện ích (desktop) và masthead
+ *  (mobile): icon + badge số lượng, giữ nguyên hành vi cũ. */
+function CartButton({
+  showLabel,
+  totalQuantity,
+  showBadge,
+}: {
+  showLabel: boolean;
+  totalQuantity: number;
+  showBadge: boolean;
+}) {
+  return (
+    <Link
+      href="/gio-hang"
+      aria-label={
+        showBadge ? `Giỏ hàng, ${totalQuantity} sản phẩm` : "Giỏ hàng"
+      }
+      className="relative inline-flex items-center gap-2 p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+    >
+      <ShoppingCart className="h-5 w-5" aria-hidden />
+      {showLabel && <span className="text-sm font-medium">Giỏ hàng</span>}
+      {showBadge && (
+        <span
+          key={totalQuantity}
+          className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 animate-pop place-items-center rounded-full bg-cta px-1 text-[11px] font-bold text-white"
+        >
+          {totalQuantity}
+        </span>
+      )}
     </Link>
   );
 }
@@ -84,7 +121,7 @@ function HeaderInner() {
     : "Tài khoản";
   const accountHref = sessionUser ? "/account" : "/auth/dang-nhap";
 
-  // Đổi trang thì đóng sản phẩm mobile (mẫu điều chỉnh state khi render,
+  // Đổi trang thì đóng menu mobile (mẫu điều chỉnh state khi render,
   // thay cho useEffect — theo khuyến nghị của React).
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (pathname !== prevPathname) {
@@ -95,28 +132,98 @@ function HeaderInner() {
   const showBadge = hydrated && totalQuantity > 0;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-paper">
-      <Container>
-        <div className="flex h-14 items-center justify-between gap-3">
-          {/* Logo (chữ — logo thật thay ở HAP-20) */}
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-2"
-            aria-label={`${shopConfig.name} — Trang chủ`}
-          >
-            <span className="grid h-9 w-9 place-items-center rounded-[2px] bg-ink text-paper">
-              <Shirt className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="font-display text-2xl font-semibold whitespace-nowrap text-ink">
-              Happier Fashion
-            </span>
-          </Link>
+    <header id="top" className="bg-paper">
+      {/* Tầng 1 — dải tiện ích (chỉ desktop): tagline trái, tài khoản /
+          quản trị / giỏ hàng phải. */}
+      <div className="hidden border-b border-line md:block">
+        <Container>
+          <div className="flex items-center justify-between py-2 text-[13px] text-muted">
+            <p>{shopConfig.tagline}</p>
+            <div className="flex items-center gap-5">
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  aria-label="Quản trị — mở Dashboard admin"
+                  className="inline-flex items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+                >
+                  <LayoutDashboard className="h-4 w-4" aria-hidden />
+                  Quản trị
+                </Link>
+              )}
+              <Link
+                href={accountHref}
+                title={sessionUser ? sessionUser.email : undefined}
+                aria-label={
+                  sessionUser
+                    ? `Tài khoản của ${sessionUser.name || sessionUser.email}`
+                    : "Tài khoản — đăng nhập"
+                }
+                className="inline-flex max-w-56 items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+              >
+                <User className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="truncate">{accountLabel}</span>
+              </Link>
+              <CartButton
+                showLabel
+                totalQuantity={totalQuantity}
+                showBadge={showBadge}
+              />
+            </div>
+          </div>
+        </Container>
+      </div>
 
-          {/* Sản phẩm desktop */}
-          <nav aria-label="Điều hướng chính" className="hidden md:block">
-            <ul className="flex items-center gap-1">
-              {mainNav.map((item) => (
-                <li key={item.href}>
+      {/* Tầng 2 — masthead: wordmark serif căn giữa, viền đôi kiểu tạp
+          chí ở dưới. Mobile: nút menu trái, giỏ hàng phải, wordmark giữa. */}
+      <div className="border-b-[3px] border-double border-line">
+        <Container>
+          <div className="relative flex flex-col items-center py-6 md:py-8">
+            <button
+              type="button"
+              className="absolute top-1/2 left-0 -translate-y-1/2 rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta md:hidden"
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
+              aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
+              onClick={() => setMobileOpen((open) => !open)}
+            >
+              {mobileOpen ? (
+                <X className="h-6 w-6" aria-hidden />
+              ) : (
+                <MenuIcon className="h-6 w-6" aria-hidden />
+              )}
+            </button>
+            <Link
+              href="/"
+              aria-label={`${shopConfig.name} — Trang chủ`}
+              className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink md:text-6xl"
+            >
+              Happier Fashion
+            </Link>
+            <p className="mt-3 text-center text-xs font-medium tracking-[0.25em] text-muted uppercase">
+              {shopConfig.tagline}
+            </p>
+            <div className="absolute top-1/2 right-0 -translate-y-1/2 md:hidden">
+              <CartButton
+                showLabel={false}
+                totalQuantity={totalQuantity}
+                showBadge={showBadge}
+              />
+            </div>
+          </div>
+        </Container>
+      </div>
+
+      {/* Tầng 3 — hàng điều hướng dính (chỉ desktop): các mục căn giữa,
+          ngăn cách nhau bằng vạch hairline dọc. */}
+      <div className="sticky top-0 z-50 hidden border-b border-line bg-paper md:block">
+        <Container>
+          <nav aria-label="Điều hướng chính">
+            <ul className="flex items-center justify-center">
+              {mainNav.map((item, index) => (
+                <li key={item.href} className="flex items-center">
+                  {index > 0 && (
+                    <span aria-hidden className="h-4 w-px bg-line" />
+                  )}
                   <NavLink
                     href={item.href}
                     label={item.label}
@@ -126,80 +233,15 @@ function HeaderInner() {
               ))}
             </ul>
           </nav>
+        </Container>
+      </div>
 
-          {/* Giỏ hàng + tài khoản + nút sản phẩm mobile */}
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Link
-              href="/gio-hang"
-              aria-label={
-                showBadge
-                  ? `Giỏ hàng, ${totalQuantity} sản phẩm`
-                  : "Giỏ hàng"
-              }
-              className="relative rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-            >
-              <ShoppingCart className="h-6 w-6" aria-hidden />
-              {showBadge && (
-                <span
-                  key={totalQuantity}
-                  className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 animate-pop place-items-center rounded-full bg-cta px-1 text-[11px] font-bold text-white"
-                >
-                  {totalQuantity}
-                </span>
-              )}
-            </Link>
-
-            {isAdmin && (
-              <Link
-                href="/admin"
-                aria-label="Quản trị — mở Dashboard admin"
-                className="inline-flex items-center gap-2 rounded-[2px] bg-ink px-3 py-2 text-[15px] font-medium text-paper transition duration-state ease-standard active:scale-[0.97] hover:bg-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta sm:px-4"
-              >
-                <LayoutDashboard className="h-5 w-5 shrink-0" aria-hidden />
-                <span className="hidden sm:inline">Quản trị</span>
-              </Link>
-            )}
-
-            <Link
-              href={accountHref}
-              title={sessionUser ? sessionUser.email : undefined}
-              aria-label={
-                sessionUser
-                  ? `Tài khoản của ${sessionUser.name || sessionUser.email}`
-                  : "Tài khoản — đăng nhập"
-              }
-              className="inline-flex max-w-44 items-center gap-2 rounded-[2px] border border-ink/25 px-3 py-2 text-[15px] font-medium text-ink transition duration-state ease-standard active:scale-[0.97] hover:border-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta sm:max-w-56 sm:px-4"
-            >
-              <User className="h-5 w-5 shrink-0" aria-hidden />
-              <span className="hidden truncate sm:inline">
-                {accountLabel}
-              </span>
-            </Link>
-
-            <button
-              type="button"
-              className="rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta md:hidden"
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-nav"
-              aria-label={mobileOpen ? "Đóng sản phẩm" : "Mở sản phẩm"}
-              onClick={() => setMobileOpen((open) => !open)}
-            >
-              {mobileOpen ? (
-                <X className="h-6 w-6" aria-hidden />
-              ) : (
-                <MenuIcon className="h-6 w-6" aria-hidden />
-              )}
-            </button>
-          </div>
-        </div>
-      </Container>
-
-      {/* Sản phẩm mobile */}
+      {/* Menu mobile */}
       {mobileOpen && (
         <nav
           id="mobile-nav"
           aria-label="Điều hướng chính trên di động"
-          className="border-t border-line bg-paper md:hidden"
+          className="border-b border-line bg-paper md:hidden"
         >
           <Container>
             <ul className="flex flex-col py-2">
@@ -233,6 +275,16 @@ function HeaderInner() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href={accountHref}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-[2px] px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
+                >
+                  <User className="h-5 w-5" aria-hidden />
+                  {accountLabel}
+                </Link>
+              </li>
             </ul>
           </Container>
         </nav>

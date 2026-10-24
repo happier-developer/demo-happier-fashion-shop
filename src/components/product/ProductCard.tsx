@@ -9,6 +9,7 @@ import {
 } from "@/lib/products/catalog";
 import { formatVnd } from "@/lib/format";
 import AddToCartButton from "./AddToCartButton";
+import FavoriteButton from "./FavoriteButton";
 
 // ProductCard theo DESIGN.md v2 — Editorial: ảnh dọc 3:4 kiểu lookbook,
 // không viền/bo góc, tên serif, giá màu ink, nút gần vuông; sản phẩm hết hàng:
@@ -38,37 +39,42 @@ export default function ProductCard({
 
   return (
     <article className="group flex flex-col bg-surface transition-transform duration-state ease-standard active:scale-[0.99]">
-      <Link
-        href={detailHref}
-        className="relative block aspect-[3/4] overflow-hidden bg-line/40"
-        aria-label={product.name}
-      >
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
-            className={`object-cover transition duration-300 group-hover:scale-105 ${
-              inStock ? "" : "grayscale"
-            }`}
-          />
-        ) : (
-          <span className="flex h-full items-center justify-center text-muted">
-            <Shirt className="h-10 w-10" aria-hidden />
-          </span>
-        )}
-        {product.isFeatured && (
-          <span className="absolute top-3 left-3 rounded-[2px] bg-ink px-2.5 py-1 text-xs font-medium text-white">
-            Nổi bật
-          </span>
-        )}
-        {!inStock && (
-          <span className="absolute top-3 right-3 rounded-[2px] bg-error px-2.5 py-1 text-xs font-medium text-white">
-            Hết hàng
-          </span>
-        )}
-      </Link>
+      {/* Vùng ảnh: nút tim nằm ngoài Link ảnh để bấm tim không điều
+          hướng sang trang chi tiết; badge Nổi bật/Hết hàng vẫn trong Link. */}
+      <div className="relative">
+        <Link
+          href={detailHref}
+          className="relative block aspect-[3/4] overflow-hidden bg-line/40"
+          aria-label={product.name}
+        >
+          {product.imageUrl ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
+              className={`object-cover transition duration-300 group-hover:scale-105 ${
+                inStock ? "" : "grayscale"
+              }`}
+            />
+          ) : (
+            <span className="flex h-full items-center justify-center text-muted">
+              <Shirt className="h-10 w-10" aria-hidden />
+            </span>
+          )}
+          {product.isFeatured && (
+            <span className="absolute top-3 left-3 rounded-[2px] bg-ink px-2.5 py-1 text-xs font-medium text-white">
+              Nổi bật
+            </span>
+          )}
+          {!inStock && (
+            <span className="absolute top-3 right-3 rounded-[2px] bg-error px-2.5 py-1 text-xs font-medium text-white">
+              Hết hàng
+            </span>
+          )}
+        </Link>
+        <FavoriteButton slug={product.slug} name={product.name} />
+      </div>
 
       <div className="flex flex-1 flex-col gap-2 pt-4">
         <Link

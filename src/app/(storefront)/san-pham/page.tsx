@@ -235,7 +235,13 @@ export default async function CatalogPage({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
+        // key theo bộ lọc: đổi lọc → lưới remount → animation fade-in
+        // chạy lại (micro-interaction v2.2), kèm press scale 0.95 đã có
+        // sẵn ở pillClasses cho mọi tab lọc.
+        <div
+          key={`${activeCategory ?? "all"}|${activeSize ?? "all"}|${activeColor ?? "all"}|${activePrice ?? "all"}|${activeSort}`}
+          className="grid animate-fade-in grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3"
+        >
           {visible.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

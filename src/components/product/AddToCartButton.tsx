@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { ShoppingCart } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart/cart-context";
 import QuantityStepper from "./QuantityStepper";
 
@@ -46,10 +46,38 @@ export default function AddToCartButton({
   const { addItem, items, hydrated } = useCart();
   const lastAddAtRef = useRef(0);
 
+  // Phản hồi "Đã thêm" (micro-interaction v2.2): sau lần bấm thêm, nút
+  // hiện tick "Đã thêm" ~1,2 giây rồi mới chuyển sang stepper (giỏ đã
+  // có hàng). Chỉ đổi hiển thị — addItem vẫn gọi đúng một lần, khóa
+  // chống bấm đúp 400ms giữ nguyên.
+  const [justAdded, setJustAdded] = useState(false);
+  const justAddedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (justAddedTimerRef.current) clearTimeout(justAddedTimerRef.current);
+    },
+    [],
+  );
+
   const cartKey = variantId ? `${productId}:${variantId}` : productId;
   const cartQuantity = hydrated
     ? (items.find((item) => item.key === cartKey)?.quantity ?? 0)
     : 0;
+
+  if (justAdded) {
+    return (
+      <button
+        type="button"
+        disabled
+        className="inline-flex items-center justify-center gap-1.5 rounded-[2px] bg-success px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white disabled:pointer-events-none disabled:opacity-100"
+      >
+        <span key="tick" className="inline-flex animate-pop">
+          <Check className="h-4 w-4" aria-hidden />
+        </span>
+        Đã thêm
+      </button>
+    );
+  }
 
   // Sản phẩm đã có trong giỏ → stepper thay cho nút thêm (trừ khi hết hàng:
   // disabled thắng, giữ trạng thái khóa như cũ).
@@ -73,6 +101,8 @@ export default function AddToCartButton({
       { productId, variantId, variantLabel, slug, name, priceVnd, imageUrl },
       quantity,
     );
+    setJustAdded(true);
+    justAddedTimerRef.current = setTimeout(() => setJustAdded(false), 1200);
   };
 
   return (
