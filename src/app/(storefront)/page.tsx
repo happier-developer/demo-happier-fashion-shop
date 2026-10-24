@@ -12,7 +12,7 @@ import {
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
-import LiquidMetalHeroBackground from "@/components/home/LiquidMetalHeroBackground";
+import SmokeFlowHeroBackground from "@/components/home/SmokeFlowHeroBackground";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
 import { formatVnd } from "@/lib/format";
@@ -179,14 +179,16 @@ export default function HomePage() {
           nên hero KHÔNG lặp lại tên shop, tagline hay địa chỉ nữa.
           Hero là điểm bắt đầu mua sắm: headline editorial + mô tả +
           2 CTA giữ nguyên + ảnh sản phẩm nổi bật 3:4.
-          Nền hero là LiquidMetal của thư viện `shaders` (WebGPU, client-only
-          qua dynamic ssr:false); shader WebGL tự viết (ShaderHeroBackground:
-          gradient chảy + ripple theo chuột) đã được gỡ khỏi hero nhưng
-          file vẫn giữ nguyên trên disk để khôi phục khi cần. LiquidMetal
-          không có prop nhận chuột nên không ripple theo chuột như shader
-          cũ — nó tự chảy. */}
+          Nền hero là SmokeFlow của thư viện `shaders` (WebGPU, client-only
+          qua dynamic ssr:false): khói cursor-driven — khói tỏa ra, cuộn
+          và tan dần theo chuyển động chuột (kéo cảm ứng cũng tỏa khói),
+          màu pastel đào → lavender để tiêu đề serif đen vẫn đọc rõ.
+          LiquidMetal (chrome lỏng tự chảy, không nhận chuột) và shader
+          WebGL tự viết (ShaderHeroBackground: gradient chảy + ripple)
+          đã được gỡ khỏi hero nhưng file vẫn giữ nguyên trên disk để
+          khôi phục khi cần. */}
       <section className="relative overflow-hidden">
-        <LiquidMetalHeroBackground />
+        <SmokeFlowHeroBackground />
         <Container className="relative z-10 grid items-center gap-10 py-14 md:grid-cols-2 md:py-20">
           <div className="flex flex-col items-start gap-6">
             <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
