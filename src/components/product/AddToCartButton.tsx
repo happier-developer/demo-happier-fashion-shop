@@ -80,7 +80,7 @@ export default function AddToCartButton({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50"
+      className="inline-flex items-center justify-center gap-1.5 rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50"
     >
       <ShoppingCart className="h-4 w-4" aria-hidden />
       Thêm vào giỏ

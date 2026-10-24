@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
-/* Token thiết kế từ DESIGN.md (Happier Fashion) — Tailwind v4 CSS-first qua @theme */
+/* Token thiết kế từ DESIGN.md v2 — Editorial (Happier Fashion) — Tailwind v4 CSS-first qua @theme */
 @theme {
-  --color-paper: #faf9f6;
+  --color-paper: #ffffff;
   --color-surface: #ffffff;
-  --color-ink: #1c1c1e;
-  --color-accent: #9a7b4f;
+  --color-ink: #111111;
+  --color-accent: #111111;
   --color-cta: #111111;
-  --color-muted: #6b7280;
-  --color-line: #e5e2dc;
+  --color-muted: #6b6b6b;
+  --color-line: #e8e8e8;
   --color-success: #4c8055;
   --color-warning: #c98a2d;
   --color-error: #b3402a;
 
   --font-sans: var(--font-be-vietnam-pro), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair-display), Georgia, "Times New Roman", serif;
 
   /* Micro-interactions (HAP-23 — DESIGN.md mục 9): token thời lượng +
      easing chuẩn cho phản hồi nhấn/bấm toàn site. */

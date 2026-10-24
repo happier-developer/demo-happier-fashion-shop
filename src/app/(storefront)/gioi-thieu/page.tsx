@@ -45,14 +45,14 @@ export default function AboutPage() {
             <p className="text-sm font-medium tracking-wide text-accent uppercase">
               Giới thiệu
             </p>
-            <h1 className="text-4xl leading-[1.2] font-bold text-ink md:text-[40px]">
+            <h1 className="font-display text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
               {aboutContent.heading}
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-muted">
               {aboutContent.lead}
             </p>
           </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-line/40">
+          <div className="relative aspect-[4/3] overflow-hidden bg-line/40">
             <Image
               src={aboutContent.heroImage}
               alt={aboutContent.heroImageAlt}
@@ -69,7 +69,7 @@ export default function AboutPage() {
       {/* ---------- Câu chuyện shop ---------- */}
       <section className="bg-surface">
         <Container className="grid items-center gap-8 py-12 md:py-16 lg:grid-cols-2 lg:gap-12">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-line/40">
+          <div className="relative aspect-[4/3] overflow-hidden bg-line/40">
             <Image
               src={aboutContent.storyImage}
               alt={aboutContent.storyImageAlt}
@@ -79,7 +79,7 @@ export default function AboutPage() {
             />
           </div>
           <div className="flex flex-col items-start gap-4">
-            <h2 className="text-2xl font-bold text-ink md:text-[32px] md:leading-[1.2]">
+            <h2 className="font-display text-3xl font-semibold text-ink md:text-4xl">
               {aboutContent.storyTitle}
             </h2>
             {aboutContent.story.map((paragraph) => (
@@ -98,7 +98,7 @@ export default function AboutPage() {
       <section>
         <Container className="py-12 md:py-16">
           <div className="mb-8 text-center">
-            <h2 className="text-2xl font-bold text-ink md:text-[32px] md:leading-[1.2]">
+            <h2 className="font-display text-3xl font-semibold text-ink md:text-4xl">
               {aboutContent.highlightsTitle}
             </h2>
             <p className="mx-auto mt-2 max-w-xl text-base text-muted">
@@ -111,12 +111,12 @@ export default function AboutPage() {
               return (
                 <div
                   key={item.title}
-                  className="flex flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-6"
+                  className="flex flex-col items-start gap-3 border-t-2 border-ink pt-6"
                 >
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-paper text-cta">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-[2px] border border-line bg-surface text-ink">
                     <Icon className="h-5 w-5" aria-hidden />
                   </span>
-                  <h3 className="font-bold text-ink">{item.title}</h3>
+                  <h3 className="font-display text-xl font-semibold text-ink">{item.title}</h3>
                   <p className="text-sm leading-relaxed text-muted">
                     {item.text}
                   </p>
@@ -130,7 +130,7 @@ export default function AboutPage() {
       {/* ---------- CTA ---------- */}
       <section className="bg-surface">
         <Container className="flex flex-col items-center gap-4 py-12 text-center md:py-16">
-          <h2 className="text-2xl font-bold text-ink md:text-[32px] md:leading-[1.2]">
+          <h2 className="font-display text-3xl font-semibold text-ink md:text-4xl">
             {aboutContent.cta.title}
           </h2>
           <p className="max-w-xl text-base leading-relaxed text-muted">

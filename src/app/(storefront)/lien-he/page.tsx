@@ -39,9 +39,9 @@ export const metadata: Metadata = {
 // component Button chỉ render link nội bộ nên 2 nút này dùng <a> thuần với
 // đúng class của Button primary/secondary.
 const callButtonClasses =
-  "inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-cta px-5 py-2.5 text-base font-medium text-white transition hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta";
+  "inline-flex flex-1 items-center justify-center gap-2 rounded-[2px] bg-cta px-5 py-2.5 text-base font-medium text-white transition hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta";
 const zaloButtonClasses =
-  "inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-ink bg-transparent px-5 py-2.5 text-base font-medium text-ink transition hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta";
+  "inline-flex flex-1 items-center justify-center gap-2 rounded-[2px] border border-ink bg-transparent px-5 py-2.5 text-base font-medium text-ink transition hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta";
 
 export default function ContactPage() {
   return (
@@ -52,7 +52,7 @@ export default function ContactPage() {
           <p className="text-sm font-medium tracking-wide text-accent uppercase">
             Liên hệ
           </p>
-          <h1 className="mt-3 text-4xl leading-[1.2] font-bold text-ink md:text-[40px]">
+          <h1 className="font-display mt-3 text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
             {contactContent.heading}
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">

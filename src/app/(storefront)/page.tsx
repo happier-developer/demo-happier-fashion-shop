@@ -75,8 +75,8 @@ async function FeaturedProductsGrid() {
 
   if (featured.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-surface px-6 py-12 text-center">
-        <Shirt className="h-10 w-10 text-accent" aria-hidden />
+      <div className="flex flex-col items-center gap-3 rounded-[2px] border border-dashed border-line bg-surface px-6 py-12 text-center">
+        <Shirt className="h-10 w-10 text-ink" aria-hidden />
         <p className="font-medium text-ink">Sản phẩm đang được cập nhật</p>
         <p className="max-w-md text-sm leading-relaxed text-muted">
           Các sản phẩm nổi bật sẽ sớm xuất hiện tại đây. Bạn vẫn có thể ghé shop
@@ -87,7 +87,7 @@ async function FeaturedProductsGrid() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
       {featured.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
@@ -99,7 +99,7 @@ function FeaturedProductsSkeleton() {
   return (
     <div
       aria-hidden
-      className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4"
+      className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3"
     >
       {Array.from({ length: 4 }).map((_, index) => (
         <ProductCardSkeleton key={index} />
@@ -111,41 +111,41 @@ function FeaturedProductsSkeleton() {
 export default function HomePage() {
   return (
     <>
-      {/* ---------- Hero ---------- */}
+      {/* ---------- Hero (DESIGN.md v2 — Editorial, typography-led) ---------- */}
       <section>
-        <Container className="grid items-center gap-8 py-12 md:py-16 lg:grid-cols-2 lg:gap-12">
-          <div className="flex flex-col items-start gap-5">
-            <p className="text-sm font-medium tracking-wide text-accent uppercase">
-              {shopConfig.tagline}
-            </p>
-            <h1 className="text-4xl leading-[1.2] font-bold text-ink md:text-[40px]">
-              {shopConfig.name}
-            </h1>
-            <p className="max-w-xl text-base leading-relaxed text-muted">
-              {shopConfig.description}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button href="/san-pham" variant="primary">
-                Xem sản phẩm
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Button>
-              <Button href="/san-pham" variant="secondary">
-                Đặt hàng ngay
-              </Button>
-            </div>
-            <p className="inline-flex items-center gap-1.5 text-sm text-muted">
-              <MapPin className="h-4 w-4 text-accent" aria-hidden />
-              {shopConfig.address}
-            </p>
+        <Container className="flex flex-col items-center gap-6 py-14 text-center md:py-20">
+          <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
+            {shopConfig.tagline}
+          </p>
+          <h1 className="font-display max-w-3xl text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
+            {shopConfig.name}
+          </h1>
+          <p className="max-w-xl text-base leading-relaxed text-muted">
+            {shopConfig.description}
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button href="/san-pham" variant="primary">
+              Xem sản phẩm
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
+            <Button href="/san-pham" variant="secondary">
+              Đặt hàng ngay
+            </Button>
           </div>
-          <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-line/40 lg:aspect-[4/3]">
+          <p className="inline-flex items-center gap-1.5 text-sm text-muted">
+            <MapPin className="h-4 w-4" aria-hidden />
+            {shopConfig.address}
+          </p>
+        </Container>
+        <Container>
+          <div className="relative aspect-[16/9] overflow-hidden bg-line/40">
             <Image
               src={shopConfig.heroImage}
               alt={`Không gian shop ${shopConfig.name}`}
               fill
               priority
               fetchPriority="high"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              sizes="100vw"
               className="object-cover"
             />
           </div>
@@ -155,9 +155,12 @@ export default function HomePage() {
       {/* ---------- Sản phẩm nổi bật (dữ liệu thật từ DB) ---------- */}
       <section className="py-4 md:py-8">
         <Container>
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-ink md:text-[32px] md:leading-[1.2]">
+              <p className="mb-2 text-xs font-medium tracking-[0.25em] text-muted uppercase">
+                Tuyển chọn
+              </p>
+              <h2 className="font-display text-3xl font-semibold text-ink md:text-4xl">
                 Sản phẩm nổi bật
               </h2>
               <p className="mt-2 text-base text-muted">
@@ -179,50 +182,39 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* ---------- Giới thiệu ngắn ---------- */}
-      <section className="mt-12 bg-surface md:mt-16">
-        <Container className="grid items-center gap-8 py-12 md:py-16 lg:grid-cols-2 lg:gap-12">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-line/40">
-            <Image
-              src={shopConfig.aboutImage}
-              alt={`Giới thiệu về ${shopConfig.name}`}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-          <div className="flex flex-col items-start gap-4">
-            <h2 className="text-2xl font-bold text-ink md:text-[32px] md:leading-[1.2]">
-              Giới thiệu về {shopConfig.name}
-            </h2>
-            <p className="text-base leading-relaxed text-muted">
-              {shopConfig.about}
-            </p>
-            <Button href="/gioi-thieu" variant="secondary">
-              Tìm hiểu thêm
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Button>
-          </div>
+      {/* ---------- Giới thiệu ngắn (DESIGN.md v2: câu statement serif lớn) ---------- */}
+      <section className="mt-16 border-y border-line bg-surface md:mt-20">
+        <Container className="flex flex-col items-center gap-6 py-14 text-center md:py-20">
+          <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
+            Về {shopConfig.name}
+          </p>
+          <p className="font-display max-w-3xl text-2xl leading-snug font-medium text-ink md:text-4xl md:leading-snug">
+            {shopConfig.about}
+          </p>
+          <Button href="/gioi-thieu" variant="secondary">
+            Tìm hiểu thêm
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Button>
         </Container>
       </section>
 
       {/* ---------- Cách đặt hàng 3 bước ---------- */}
       <section>
         <Container className="py-12 md:py-16">
-          <h2 className="mb-8 text-center text-2xl font-bold text-ink md:text-[32px] md:leading-[1.2]">
+          <h2 className="font-display mb-10 text-center text-3xl font-semibold text-ink md:text-4xl">
             Đặt hàng trong 3 bước
           </h2>
           <div className="grid gap-4 md:grid-cols-3 md:gap-6">
             {orderSteps.map((step, index) => (
               <div
                 key={step.title}
-                className="flex flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-6"
+                className="flex flex-col items-start gap-3 border-t-2 border-ink pt-6"
               >
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-paper text-cta">
-                  <step.icon className="h-5 w-5" aria-hidden />
+                <span className="font-display text-3xl font-semibold text-muted">
+                  {String(index + 1).padStart(2, "0")}
                 </span>
-                <h3 className="font-bold text-ink">
-                  {index + 1}. {step.title}
+                <h3 className="font-display text-xl font-semibold text-ink">
+                  {step.title}
                 </h3>
                 <p className="text-sm leading-relaxed text-muted">
                   {step.text}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Be_Vietnam_Pro } from "next/font/google";
+import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { aboutContent, shopConfig, siteUrl } from "@/lib/config";
 
@@ -7,6 +7,16 @@ const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["vietnamese", "latin"],
   weight: ["400", "500", "700"],
   variable: "--font-be-vietnam-pro",
+  display: "swap",
+});
+
+// Serif display cho tiêu đề (DESIGN.md v2 — Editorial): Playfair Display
+// có subset vietnamese (đã kiểm chứng: subsets gồm vietnamese), dùng cho
+// heading / tên sản phẩm / câu statement, nội dung vẫn Be Vietnam Pro.
+const playfairDisplay = Playfair_Display({
+  subsets: ["vietnamese", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair-display",
   display: "swap",
 });
 
@@ -49,7 +59,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body className={`${beVietnamPro.variable} antialiased`}>{children}</body>
+      <body className={`${beVietnamPro.variable} ${playfairDisplay.variable} antialiased`}>{children}</body>
     </html>
   );
 }

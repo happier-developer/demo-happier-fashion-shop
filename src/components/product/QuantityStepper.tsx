@@ -82,7 +82,7 @@ export default function QuantityStepper({
   };
 
   const buttonSize = size === "detail" ? "h-11 w-11" : "h-9 w-9";
-  const buttonClasses = `inline-flex ${buttonSize} items-center justify-center rounded-xl border border-line bg-surface text-ink transition duration-state ease-standard active:scale-95 hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50`;
+  const buttonClasses = `inline-flex ${buttonSize} items-center justify-center rounded-[2px] border border-line bg-surface text-ink transition duration-state ease-standard active:scale-95 hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50`;
 
   return (
     <div
@@ -111,7 +111,7 @@ export default function QuantityStepper({
           if (e.key === "Escape") setDraft(null); // hủy nhập, hoàn số cũ
         }}
         aria-label={`Số lượng ${name}, nhập số để thay đổi`}
-        className="h-9 w-10 rounded-lg text-center font-bold text-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+        className="h-9 w-10 rounded-[2px] text-center font-bold text-ink tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
       />
       {/* Thông báo số lượng đã chốt cho trình đọc màn hình. */}
       <span className="sr-only" role="status">

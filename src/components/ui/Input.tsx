@@ -5,11 +5,11 @@ import type {
 } from "react";
 
 // Input chuẩn theo DESIGN.md mục 5: nhãn phía trên, viền --color-line,
-// bo 12px (rounded-xl), lỗi hiển thị bằng chữ --color-error ngay dưới ô.
+// bo gần vuông 2px (rounded-[2px]) — DESIGN.md v2 Editorial, lỗi hiển thị bằng chữ --color-error ngay dưới ô.
 // Field bọc nhãn + ô nhập + dòng lỗi, dùng cho các form (checkout, admin...).
 
 const inputClasses =
-  "w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-base text-ink placeholder:text-muted/70 transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-50 aria-[invalid=true]:border-error";
+  "w-full rounded-[2px] border border-line bg-surface px-4 py-2.5 text-base text-ink placeholder:text-muted/70 transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-50 aria-[invalid=true]:border-error";
 
 interface FieldProps {
   label: string;

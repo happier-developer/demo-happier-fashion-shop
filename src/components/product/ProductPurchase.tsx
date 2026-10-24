@@ -79,10 +79,10 @@ export default function ProductPurchase({
     );
 
   const stepperButtonClasses =
-    "inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-surface text-ink transition duration-state ease-standard active:scale-95 hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50";
+    "inline-flex h-11 w-11 items-center justify-center rounded-[2px] border border-line bg-surface text-ink transition duration-state ease-standard active:scale-95 hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50";
 
   const pill = (active: boolean) =>
-    `inline-flex items-center rounded-full px-4 py-2 text-sm font-medium transition duration-state ease-standard active:scale-95 ${
+    `inline-flex items-center rounded-[2px] px-4 py-2 text-sm font-medium transition duration-state ease-standard active:scale-95 ${
       active
         ? "bg-ink text-paper"
         : "border border-line bg-surface text-ink hover:border-accent"

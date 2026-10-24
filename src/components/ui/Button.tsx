@@ -7,7 +7,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 // - Ghost: chỉ chữ
 // Trạng thái: hover đậm hơn, pressed thu nhỏ 0.97 (micro-interaction
 // HAP-23 — DESIGN.md mục 9), disabled mờ 50% + không bấm được, focus có viền rõ.
-// Bo góc 12px (rounded-xl).
+// Bo góc gần vuông 2px (rounded-[2px]) — DESIGN.md v2 Editorial.
 
 type Variant = "primary" | "secondary" | "ghost";
 
@@ -19,7 +19,7 @@ const variantClasses: Record<Variant, string> = {
 };
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-base font-medium transition duration-state ease-standard active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-[2px] px-5 py-2.5 text-base font-medium transition duration-state ease-standard active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50";
 
 interface CommonProps {
   variant?: Variant;

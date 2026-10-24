@@ -45,10 +45,10 @@ async function loadCatalog(): Promise<LoadedCatalog | null> {
 }
 
 function pillClasses(active: boolean): string {
-  return `inline-flex items-center rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition duration-state ease-standard active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta ${
+  return `inline-flex items-center rounded-[2px] px-4 py-2 text-sm font-medium whitespace-nowrap transition duration-state ease-standard active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta ${
     active
       ? "bg-ink text-paper"
-      : "border border-line bg-surface text-ink hover:border-accent hover:text-cta"
+      : "border border-line bg-surface text-ink hover:border-ink hover:text-cta"
   }`;
 }
 
@@ -109,8 +109,8 @@ export default async function CatalogPage({
   if (data === null) {
     return (
       <Container className="py-10 md:py-14">
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-surface px-6 py-12 text-center">
-          <Shirt className="h-10 w-10 text-accent" aria-hidden />
+        <div className="flex flex-col items-center gap-3 rounded-[2px] border border-dashed border-line bg-surface px-6 py-12 text-center">
+          <Shirt className="h-10 w-10 text-ink" aria-hidden />
           <p className="font-medium text-ink">Sản phẩm đang được cập nhật</p>
           <p className="max-w-md text-sm leading-relaxed text-muted">
             Bộ sưu tập sẽ sớm xuất hiện tại đây. Bạn vui lòng quay lại trong
@@ -148,7 +148,7 @@ export default async function CatalogPage({
   return (
     <Container className="py-10 md:py-14">
       <div className="mb-8 flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-ink md:text-[32px] md:leading-[1.2]">
+        <h1 className="font-display text-4xl font-semibold text-ink md:text-5xl">
           Sản phẩm
         </h1>
         <p className="max-w-xl text-base leading-relaxed text-muted">
@@ -223,8 +223,8 @@ export default async function CatalogPage({
       </div>
 
       {visible.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-surface px-6 py-12 text-center">
-          <Shirt className="h-10 w-10 text-accent" aria-hidden />
+        <div className="flex flex-col items-center gap-3 rounded-[2px] border border-dashed border-line bg-surface px-6 py-12 text-center">
+          <Shirt className="h-10 w-10 text-ink" aria-hidden />
           <p className="font-medium text-ink">Không có sản phẩm phù hợp bộ lọc</p>
           <p className="max-w-md text-sm leading-relaxed text-muted">
             Bạn xem thử{" "}
@@ -235,7 +235,7 @@ export default async function CatalogPage({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
           {visible.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
