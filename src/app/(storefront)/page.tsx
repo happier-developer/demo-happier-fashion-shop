@@ -16,7 +16,6 @@ import SmokeFlowHeroBackground from "@/components/home/SmokeFlowHeroBackground";
 import CollectionSections from "@/components/home/CollectionSections";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
-import { formatVnd } from "@/lib/format";
 import type { Product } from "@/lib/db/schema";
 import { getFeaturedProducts } from "@/lib/products/catalog";
 
@@ -136,35 +135,50 @@ async function HeroProductVisual() {
     );
   }
 
-  return (
-    <figure>
+  // Sản phẩm jeans: ảnh cutout nền trong suốt trên vòng tròn be (CSS) để
+  // nền SmokeFlow của hero lộ ra xung quanh vòng tròn — caption tên/giá
+  // đã bỏ theo yêu cầu, chỉ còn ảnh liên kết tới trang chi tiết.
+  if (product.slug === "quan-jeans-ong-dung") {
+    return (
       <Link
         href={`/san-pham/${product.slug}`}
-        className="relative block aspect-[3/4] overflow-hidden bg-line/40"
+        className="relative block aspect-[3/4]"
         aria-label={product.name}
       >
+        <div
+          aria-hidden
+          className="absolute left-1/2 top-1/2 aspect-square w-full -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{ backgroundColor: "#cdb39b" }}
+        />
         <Image
-          src={product.imageUrl}
+          src="/images/quan-jeans-model-cutout.png"
           alt={product.name}
           fill
           priority
           fetchPriority="high"
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="hero-zoom object-cover"
+          className="hero-zoom object-contain"
         />
       </Link>
-      <figcaption className="flex items-baseline justify-between gap-4 pt-4">
-        <Link
-          href={`/san-pham/${product.slug}`}
-          className="title-sweep font-display text-lg font-semibold text-ink transition hover:text-cta"
-        >
-          {product.name}
-        </Link>
-        <span className="shrink-0 font-bold text-ink">
-          {formatVnd(product.priceVnd)}
-        </span>
-      </figcaption>
-    </figure>
+    );
+  }
+
+  return (
+    <Link
+      href={`/san-pham/${product.slug}`}
+      className="relative block aspect-[3/4] overflow-hidden bg-line/40"
+      aria-label={product.name}
+    >
+      <Image
+        src={product.imageUrl}
+        alt={product.name}
+        fill
+        priority
+        fetchPriority="high"
+        sizes="(max-width: 768px) 100vw, 50vw"
+        className="hero-zoom object-cover"
+      />
+    </Link>
   );
 }
 
