@@ -12,7 +12,7 @@ import {
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
-import ShaderHeroBackground from "@/components/home/ShaderHeroBackground";
+import LiquidMetalHeroBackground from "@/components/home/LiquidMetalHeroBackground";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
 import { formatVnd } from "@/lib/format";
@@ -179,11 +179,14 @@ export default function HomePage() {
           nên hero KHÔNG lặp lại tên shop, tagline hay địa chỉ nữa.
           Hero là điểm bắt đầu mua sắm: headline editorial + mô tả +
           2 CTA giữ nguyên + ảnh sản phẩm nổi bật 3:4.
-          Nền hero là shader WebGL (ShaderHeroBackground: gradient chảy +
-          ripple theo chuột); lớp mực InkPuddleLayer đã được gỡ khỏi hero
-          để hai hiệu ứng chuột không tranh nhau. */}
+          Nền hero là LiquidMetal của thư viện `shaders` (WebGPU, client-only
+          qua dynamic ssr:false); shader WebGL tự viết (ShaderHeroBackground:
+          gradient chảy + ripple theo chuột) đã được gỡ khỏi hero nhưng
+          file vẫn giữ nguyên trên disk để khôi phục khi cần. LiquidMetal
+          không có prop nhận chuột nên không ripple theo chuột như shader
+          cũ — nó tự chảy. */}
       <section className="relative overflow-hidden">
-        <ShaderHeroBackground />
+        <LiquidMetalHeroBackground />
         <Container className="relative z-10 grid items-center gap-10 py-14 md:grid-cols-2 md:py-20">
           <div className="flex flex-col items-start gap-6">
             <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
