@@ -1,0 +1,77 @@
+/* Ink-puddle blob layer: decorative overlay behind the hero content.
+   Scoped to this component only — globals.css is untouched. */
+
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: #111; /* site ink token */
+  will-change: transform, border-radius;
+}
+
+/* Classic organic-blob morph: multi-value border-radius drifting between
+   lopsided amoeba shapes. Each blob gets its own rhythm so the cluster
+   never moves in lockstep. */
+@keyframes morph-a {
+  0%, 100% {
+    border-radius: 58% 42% 55% 45% / 55% 48% 52% 45%;
+  }
+  25% {
+    border-radius: 45% 55% 48% 52% / 60% 42% 58% 40%;
+  }
+  50% {
+    border-radius: 52% 48% 60% 40% / 45% 60% 40% 55%;
+  }
+  75% {
+    border-radius: 40% 60% 42% 58% / 52% 55% 45% 48%;
+  }
+}
+
+@keyframes morph-b {
+  0%, 100% {
+    border-radius: 48% 52% 40% 60% / 62% 38% 62% 38%;
+  }
+  33% {
+    border-radius: 60% 40% 55% 45% / 40% 58% 42% 60%;
+  }
+  66% {
+    border-radius: 42% 58% 62% 38% / 55% 45% 55% 45%;
+  }
+}
+
+@keyframes morph-c {
+  0%, 100% {
+    border-radius: 55% 45% 62% 38% / 48% 55% 45% 52%;
+  }
+  50% {
+    border-radius: 38% 62% 45% 55% / 60% 40% 60% 40%;
+  }
+}
+
+.morph1 {
+  animation: morph-a 11s ease-in-out infinite;
+}
+
+.morph2 {
+  animation: morph-b 14s ease-in-out infinite;
+}
+
+.morph3 {
+  animation: morph-c 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph1,
+  .morph2,
+  .morph3 {
+    animation: none;
+  }
+}
