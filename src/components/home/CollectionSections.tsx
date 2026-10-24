@@ -1,8 +1,8 @@
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
+import CollectionParallaxImage from "@/components/home/CollectionParallaxImage";
 import { getCatalogData } from "@/lib/products/catalog";
 
 // Bộ sưu tập theo mùa trên trang chủ: mỗi mùa 1 hero full-screen
@@ -64,14 +64,11 @@ export default async function CollectionSections() {
             key={collection.slug}
             aria-label={`Bộ sưu tập ${collection.name}`}
           >
-            {/* Hero full-screen của bộ sưu tập */}
+            {/* Hero full-screen của bộ sưu tập — ảnh parallax, chữ đứng yên */}
             <div className="relative min-h-svh overflow-hidden bg-line/40">
-              <Image
+              <CollectionParallaxImage
                 src={collection.hero}
                 alt={`Bộ sưu tập ${collection.name}`}
-                fill
-                sizes="100vw"
-                className="object-cover"
               />
               <div className="absolute inset-0 bg-ink/30" aria-hidden />
               <div className="relative z-10 flex min-h-svh flex-col justify-end">
