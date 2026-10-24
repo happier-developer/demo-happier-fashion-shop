@@ -171,12 +171,12 @@ export default function Footer() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="group flex items-baseline gap-3 py-3 transition hover:text-cta"
+                    className="footer-index-link group flex items-baseline gap-3 py-3 transition hover:text-cta"
                   >
                     <span className="text-xs font-medium text-muted tabular-nums">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <span className="font-display text-lg font-semibold">
+                    <span className="footer-index-label font-display text-lg font-semibold">
                       {item.label}
                     </span>
                     <ArrowUpRight

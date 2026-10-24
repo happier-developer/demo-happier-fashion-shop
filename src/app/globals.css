@@ -195,6 +195,121 @@ body {
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Hiệu ứng hover Editorial (HAP-45): tinh tế, chỉ transform /
+   shadow / color / opacity — không đổi width/height/margin nên không
+   gây layout shift. Toàn bộ khối nằm trong @media (hover: hover)
+   nên thiết bị cảm ứng không bị dính trạng thái hover; khối
+   prefers-reduced-motion ở trên đã rút mọi transition về ~0ms nên
+   người dùng bật giảm chuyển động cũng không thấy motion thừa.
+   Hiệu ứng hover màu đơn giản đã có sẵn từ trước (hover:text-cta,
+   hover:bg-ink...) được giữ nguyên — khối này chỉ thêm các hiệu ứng
+   mới: nâng thẻ, zoom ảnh, sweep gạch chân, hiện mờ action phụ. */
+.product-card {
+  transition:
+    transform 300ms ease-out,
+    box-shadow 300ms ease-out;
+}
+
+.product-card-image {
+  transition: transform 400ms ease-out;
+}
+
+.quick-view-btn {
+  transition: opacity 300ms ease-out;
+}
+
+.nav-sweep {
+  position: relative;
+}
+
+.nav-sweep:not([aria-current="page"])::after {
+  content: "";
+  position: absolute;
+  right: 20px;
+  bottom: 8px;
+  left: 20px;
+  height: 2px;
+  background: var(--color-ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 300ms ease-out;
+}
+
+/* Ghi đè transition của nút (Tailwind `transition`): phải liệt kê cả
+   màu nền/chữ/viền, nếu không màu hover đậm (hover:bg-ink...) sẽ đổi
+   tức thì thay vì chuyển mềm như trước. */
+.btn-lift {
+  transition:
+    transform 300ms ease-out,
+    box-shadow 300ms ease-out,
+    background-color 300ms ease-out,
+    color 300ms ease-out,
+    border-color 300ms ease-out;
+}
+
+.hero-zoom {
+  transition: transform 400ms ease-out;
+}
+
+.title-sweep {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition:
+    background-size 300ms ease-out,
+    color 300ms ease-out;
+}
+
+@media (hover: hover) {
+  /* Thẻ sản phẩm: nâng nhẹ + bóng mềm; ảnh zoom chậm trong khung
+     overflow-hidden nên không tràn; nút xem nhanh hiện mờ dần. */
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgb(17 17 17 / 0.1);
+  }
+
+  .product-card:hover .product-card-image {
+    transform: scale(1.05);
+  }
+
+  .product-card:hover .quick-view-btn {
+    opacity: 1;
+  }
+
+  /* Nav desktop: gạch chân quét ngang từ trái sang; link active giữ
+     nguyên gạch chân Tailwind, không vẽ thêm vạch ::after. */
+  .nav-sweep:not([aria-current="page"]):hover::after {
+    transform: scaleX(1);
+  }
+
+  /* Nút/CTA: nâng nhẹ + bóng mềm; màu đậm đã có ở variant (hover:bg-ink
+     ...), press-scale (active:scale) và ripple giữ nguyên vì chúng dùng
+     thuộc tính scale / phần tử riêng, không xung đột với transform. */
+  .btn-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgb(17 17 17 / 0.1);
+  }
+
+  /* Ảnh hero trang chủ: zoom rất nhẹ, chậm. */
+  .hero-zoom:hover {
+    transform: scale(1.03);
+  }
+
+  /* Tiêu đề thẻ + tiêu đề ảnh hero: gạch chân quét ngang mềm, chạy
+     cùng nhịp đổi màu sang cta đã có ở class hover:text-cta. */
+  .title-sweep:hover {
+    background-size: 100% 1px;
+  }
+
+  /* Link mục lục footer: gạch chân mềm khi hover (mũi tên
+     group-hover:opacity-100 đã có sẵn giữ nguyên). */
+  .footer-index-link:hover .footer-index-label {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+}
+
 /* Editorial serif override (font fix 2026-10-24): unlayered rule, placed
    last so it beats layered Tailwind utilities in the cascade. Forces
    .font-display elements to resolve Playfair Display directly instead of
