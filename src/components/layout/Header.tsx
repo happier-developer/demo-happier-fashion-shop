@@ -324,13 +324,22 @@ function HeaderInner() {
                 href="/"
                 onClick={handleBrandClick}
                 aria-label={`${shopConfig.name} — Trang chủ`}
-                className="font-display relative text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide md:text-6xl"
+                className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide md:text-6xl"
               >
-                Happier Fashion
-                <span
-                  aria-hidden
-                  className="absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
-                />
+                {/* Wordmark wrapper owns the underline: previously the
+                    sweep was positioned against the inline <a>, whose
+                    box follows the font content box (Playfair overflows
+                    its 60px line box), so the line landed on the tagline
+                    below. This inline-block wrapper's box is exactly the
+                    wordmark line box, so the line now sits under the
+                    glyphs only — clear of the tagline. */}
+                <span className="relative inline-block leading-none">
+                  Happier Fashion
+                  <span
+                    aria-hidden
+                    className="absolute -bottom-2.5 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
+                  />
+                </span>
               </Link>
               {bursts.map((burst) => (
                 <BrandSplash
