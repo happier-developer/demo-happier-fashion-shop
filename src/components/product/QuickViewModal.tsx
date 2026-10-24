@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { Shirt, X } from "lucide-react";
+import { Shirt, X, ZoomIn } from "lucide-react";
 import type { Product } from "@/lib/db/schema";
 import type { ProductWithVariants } from "@/lib/products/catalog";
 import { formatVnd } from "@/lib/format";
 import AddToCartButton from "./AddToCartButton";
+import ImageLightbox from "./ImageLightbox";
 
 // Khung xem nhanh sản phẩm (click effect v2.3): mở từ nút "Xem nhanh"
 // trên thẻ, KHÔNG điều hướng. Nội dung: ảnh lớn, tên serif, giá theo
@@ -66,11 +67,15 @@ export default function QuickViewModal({
   const displayPrice = selectedVariant?.priceVnd ?? product.priceVnd;
   const isDisabled =
     !product.isAvailable || (hasVariants && !selectedVariant);
+  // Lightbox (v2.4) mở từ ảnh lớn của khung xem nhanh; lightbox có ESC
+  // riêng nên ESC ở đây phải nhường khi lightbox đang mở, nếu không một
+  // phím ESC sẽ đóng cả hai lớp.
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !lightboxOpen) onClose();
     };
     document.addEventListener("keydown", onKeyDown);
     const previousOverflow = document.body.style.overflow;
@@ -79,7 +84,7 @@ export default function QuickViewModal({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, onClose]);
+  }, [open, onClose, lightboxOpen]);
 
   if (!open) return null;
 
@@ -104,13 +109,28 @@ export default function QuickViewModal({
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-line/40 sm:aspect-auto sm:min-h-[480px]">
           {product.imageUrl ? (
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              className="object-cover"
-            />
+            <>
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                aria-label={`Xem ảnh lớn của ${product.name}`}
+                className="absolute inset-0 cursor-zoom-in"
+              >
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </button>
+              <span
+                className="pointer-events-none absolute right-4 bottom-4 grid h-9 w-9 place-items-center rounded-[2px] bg-paper/90 text-ink"
+                aria-hidden
+              >
+                <ZoomIn className="h-5 w-5" />
+              </span>
+            </>
           ) : (
             <span className="flex h-full items-center justify-center text-muted">
               <Shirt className="h-12 w-12" aria-hidden />
@@ -221,6 +241,13 @@ export default function QuickViewModal({
           </div>
         </div>
       </div>
+      {product.imageUrl && (
+        <ImageLightbox
+          images={[{ src: product.imageUrl, alt: product.name }]}
+          open={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>,
     document.body,
   );
