@@ -12,6 +12,7 @@ import {
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
+import InkPuddleLayer from "@/components/home/InkPuddleLayer";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
 import { formatVnd } from "@/lib/format";
@@ -178,8 +179,9 @@ export default function HomePage() {
           nên hero KHÔNG lặp lại tên shop, tagline hay địa chỉ nữa.
           Hero là điểm bắt đầu mua sắm: headline editorial + mô tả +
           2 CTA giữ nguyên + ảnh sản phẩm nổi bật 3:4. */}
-      <section>
-        <Container className="grid items-center gap-10 py-14 md:grid-cols-2 md:py-20">
+      <section className="relative overflow-hidden">
+        <InkPuddleLayer />
+        <Container className="relative z-10 grid items-center gap-10 py-14 md:grid-cols-2 md:py-20">
           <div className="flex flex-col items-start gap-6">
             <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
               Áo · Quần · Váy · Áo khoác
