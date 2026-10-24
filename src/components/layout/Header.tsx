@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   LayoutDashboard,
   Menu as MenuIcon,
@@ -105,6 +105,102 @@ function CartButton({
   );
 }
 
+/** Event the hero ink blob listens for: a brand wordmark click makes
+ *  the hero liquid do a splash on the homepage (where the layer is
+ *  mounted); on other pages there is no listener and nothing happens. */
+export const BRAND_SPLASH_EVENT = "happier-brand-splash";
+
+type Burst = { id: number; x: number; y: number };
+
+/** Ink-splash burst at a brand click: several small ink droplets burst
+ *  outward from the click point plus one expanding ripple ring. Rendered
+ *  with the Web Animations API (no CSS file touched), pointer-events
+ *  none so it can never block nav/cart buttons, and removed ~850ms after
+ *  firing. Navigation is untouched — the handler never prevents default. */
+function BrandSplash({
+  burst,
+  onDone,
+}: {
+  burst: Burst;
+  onDone: (id: number) => void;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const droplets =
+      Array.from(el.querySelectorAll<HTMLElement>("[data-droplet]"));
+    const ring = el.querySelector<HTMLElement>("[data-ring]");
+    const animations: Animation[] = [];
+    droplets.forEach((d, i) => {
+      const angle = (i / droplets.length) * Math.PI * 2;
+      const dist = 26 + (i % 3) * 10;
+      animations.push(
+        d.animate(
+          [
+            {
+              transform: "translate(-50%, -50%) scale(0.4)",
+              opacity: 1,
+            },
+            {
+              transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(1)`,
+              opacity: 0,
+            },
+          ],
+          {
+            duration: 750,
+            easing: "cubic-bezier(0.2, 0, 0, 1)",
+            fill: "forwards",
+          },
+        ),
+      );
+    });
+    if (ring) {
+      animations.push(
+        ring.animate(
+          [
+            { transform: "translate(-50%, -50%) scale(0.25)", opacity: 0.7 },
+            { transform: "translate(-50%, -50%) scale(1)", opacity: 0 },
+          ],
+          { duration: 800, easing: "ease-out", fill: "forwards" },
+        ),
+      );
+    }
+    const timer = window.setTimeout(() => onDone(burst.id), 850);
+    return () => {
+      window.clearTimeout(timer);
+      animations.forEach((a) => a.cancel());
+    };
+  }, [burst, onDone]);
+  return (
+    <span
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute z-[60]"
+      style={{ left: burst.x, top: burst.y }}
+    >
+      <span
+        data-ring
+        className="absolute h-24 w-24 rounded-full border-2 border-ink"
+        style={{ transform: "translate(-50%, -50%)" }}
+      />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <span
+          key={i}
+          data-droplet
+          className="absolute bg-ink"
+          style={{
+            width: 6 + (i % 3) * 2,
+            height: 6 + (i % 3) * 2,
+            borderRadius: "58% 42% 55% 45% / 55% 48% 52% 45%",
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
 function HeaderInner() {
   const pathname = usePathname();
   const { totalQuantity, hydrated } = useCart();
@@ -130,6 +226,26 @@ function HeaderInner() {
   }
 
   const showBadge = hydrated && totalQuantity > 0;
+
+  // Brand-click ink splash: burst at the click point + tell the hero
+  // blob (homepage only) to splash. Skipped under reduced motion, and
+  // never prevents the link's normal navigation to "/".
+  const [bursts, setBursts] = useState<Burst[]>([]);
+  const burstIdRef = useRef(0);
+  const removeBurst = useCallback(
+    (id: number) => setBursts((prev) => prev.filter((b) => b.id !== id)),
+    [],
+  );
+  const handleBrandClick = (e: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    // Keyboard activation reports 0,0 — fall back to the wordmark center.
+    const x = e.clientX ? e.clientX - rect.left : rect.width / 2;
+    const y = e.clientY ? e.clientY - rect.top : rect.height / 2;
+    burstIdRef.current += 1;
+    setBursts((prev) => [...prev, { id: burstIdRef.current, x, y }]);
+    window.dispatchEvent(new CustomEvent(BRAND_SPLASH_EVENT));
+  };
 
   return (
     <header id="top" className="bg-paper">
@@ -192,13 +308,23 @@ function HeaderInner() {
                 <MenuIcon className="h-6 w-6" aria-hidden />
               )}
             </button>
-            <Link
-              href="/"
-              aria-label={`${shopConfig.name} — Trang chủ`}
-              className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink md:text-6xl"
-            >
-              Happier Fashion
-            </Link>
+            <span className="relative inline-block">
+              <Link
+                href="/"
+                onClick={handleBrandClick}
+                aria-label={`${shopConfig.name} — Trang chủ`}
+                className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink md:text-6xl"
+              >
+                Happier Fashion
+              </Link>
+              {bursts.map((burst) => (
+                <BrandSplash
+                  key={burst.id}
+                  burst={burst}
+                  onDone={removeBurst}
+                />
+              ))}
+            </span>
             <p className="mt-3 text-center text-xs font-medium tracking-[0.25em] text-muted uppercase">
               {shopConfig.tagline}
             </p>
