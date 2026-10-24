@@ -206,6 +206,17 @@ function HeaderInner() {
   const { totalQuantity, hydrated } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Nav morph khi cuộn: hàng nav luôn sticky và luôn hiển thị (không
+  // ẩn khi cuộn xuống); chỉ đổi nền/blur/bóng khi cuộn quá ngưỡng, và
+  // chiều cao hàng không đổi nên nội dung bên dưới không bị nhảy.
+  const [navScrolled, setNavScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > 32);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // Phiên đăng nhập + quyền admin lấy từ SessionProvider (HAP-30 vòng 2:
   // SDK auth tải lười sau lần render đầu, không còn trong JS đầu trang).
   // Chỉ để HIỂN THỊ: chưa đăng nhập (hoặc phiên chưa tải xong) → nút
@@ -308,14 +319,18 @@ function HeaderInner() {
                 <MenuIcon className="h-6 w-6" aria-hidden />
               )}
             </button>
-            <span className="relative inline-block">
+            <span className="group relative inline-block">
               <Link
                 href="/"
                 onClick={handleBrandClick}
                 aria-label={`${shopConfig.name} — Trang chủ`}
-                className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink md:text-6xl"
+                className="font-display relative text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide md:text-6xl"
               >
                 Happier Fashion
+                <span
+                  aria-hidden
+                  className="absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
+                />
               </Link>
               {bursts.map((burst) => (
                 <BrandSplash
@@ -341,7 +356,13 @@ function HeaderInner() {
 
       {/* Tầng 3 — hàng điều hướng dính (chỉ desktop): các mục căn giữa,
           ngăn cách nhau bằng vạch hairline dọc. */}
-      <div className="sticky top-0 z-50 hidden border-b border-line bg-paper md:block">
+      <div
+        className={`sticky top-0 z-50 hidden border-b border-line motion-safe:transition-[background-color,box-shadow,backdrop-filter] motion-safe:duration-300 motion-safe:ease-standard md:block ${
+          navScrolled
+            ? "bg-white/75 shadow-[0_2px_16px_rgba(0,0,0,0.06)] backdrop-blur-md"
+            : "bg-paper"
+        }`}
+      >
         <Container>
           <nav aria-label="Điều hướng chính">
             <ul className="flex items-center justify-center">
