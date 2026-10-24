@@ -308,14 +308,18 @@ function HeaderInner() {
                 <MenuIcon className="h-6 w-6" aria-hidden />
               )}
             </button>
-            <span className="relative inline-block">
+            <span className="group relative inline-block">
               <Link
                 href="/"
                 onClick={handleBrandClick}
                 aria-label={`${shopConfig.name} — Trang chủ`}
-                className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink md:text-6xl"
+                className="font-display relative text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide md:text-6xl"
               >
                 Happier Fashion
+                <span
+                  aria-hidden
+                  className="absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
+                />
               </Link>
               {bursts.map((burst) => (
                 <BrandSplash
