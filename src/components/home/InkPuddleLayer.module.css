@@ -15,6 +15,33 @@
   top: 0;
   background: #111; /* site ink token */
   will-change: transform, border-radius;
+  pointer-events: none;
+}
+
+/* Negative lens overlay: full hero section at z-20 (above the z-10
+   content, so it sits over the hero image), fully pointer-events:none
+   so image links and CTAs stay clickable. The overlay itself is
+   transparent; only the .lens blob inverts, and JS clip-path confines
+   the overlay to the image bounds so text/CTAs are never inverted. */
+.lensLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Blob-shaped invert lens: transparent body + backdrop-filter, so the
+   photo underneath shows inverted inside the blob shape. */
+.lens {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: transparent;
+  -webkit-backdrop-filter: invert(1);
+  backdrop-filter: invert(1);
+  will-change: transform, border-radius;
+  pointer-events: none;
 }
 
 /* Classic organic-blob morph: multi-value border-radius drifting between
@@ -41,5 +68,9 @@
 @media (prefers-reduced-motion: reduce) {
   .morph1 {
     animation: none;
+  }
+  .lens {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
