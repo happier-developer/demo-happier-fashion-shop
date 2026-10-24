@@ -10,8 +10,8 @@ import {
 import { formatVnd } from "@/lib/format";
 import AddToCartButton from "./AddToCartButton";
 
-// ProductCard theo DESIGN.md mục 5: ảnh 4:3, tên sản phẩm, ghi chú ngắn,
-// giá (weight 700, màu accent), nút Thêm vào giỏ; sản phẩm hết hàng:
+// ProductCard theo DESIGN.md v2 — Editorial: ảnh dọc 3:4 kiểu lookbook,
+// không viền/bo góc, tên serif, giá màu ink, nút gần vuông; sản phẩm hết hàng:
 // ảnh xám + nhãn "Hết hàng". Tên và ảnh bấm sang trang chi tiết
 // /san-pham/[slug]. Sản phẩm có biến thể: thẻ không thêm thẳng vào giỏ
 // (chưa chọn size/màu) mà dẫn sang trang chi tiết để chọn biến thể;
@@ -37,10 +37,10 @@ export default function ProductCard({
       : formatVnd(product.priceVnd);
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-transform duration-state ease-standard active:scale-[0.99]">
+    <article className="group flex flex-col bg-surface transition-transform duration-state ease-standard active:scale-[0.99]">
       <Link
         href={detailHref}
-        className="relative block aspect-[4/3] overflow-hidden bg-line/40"
+        className="relative block aspect-[3/4] overflow-hidden bg-line/40"
         aria-label={product.name}
       >
         {product.imageUrl ? (
@@ -48,7 +48,7 @@ export default function ProductCard({
             src={product.imageUrl}
             alt={product.name}
             fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
             className={`object-cover transition duration-300 group-hover:scale-105 ${
               inStock ? "" : "grayscale"
             }`}
@@ -59,21 +59,21 @@ export default function ProductCard({
           </span>
         )}
         {product.isFeatured && (
-          <span className="absolute top-3 left-3 rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-white">
+          <span className="absolute top-3 left-3 rounded-[2px] bg-ink px-2.5 py-1 text-xs font-medium text-white">
             Nổi bật
           </span>
         )}
         {!inStock && (
-          <span className="absolute top-3 right-3 rounded-full bg-error px-2.5 py-1 text-xs font-medium text-white">
+          <span className="absolute top-3 right-3 rounded-[2px] bg-error px-2.5 py-1 text-xs font-medium text-white">
             Hết hàng
           </span>
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <div className="flex flex-1 flex-col gap-2 pt-4">
         <Link
           href={detailHref}
-          className="line-clamp-1 font-bold text-ink transition hover:text-cta"
+          className="font-display line-clamp-1 text-lg font-semibold text-ink transition hover:text-cta"
         >
           {product.name}
         </Link>
@@ -83,11 +83,11 @@ export default function ProductCard({
           </p>
         )}
         <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-bold text-accent">{priceLabel}</span>
+          <span className="font-bold text-ink">{priceLabel}</span>
           {hasVariants ? (
             <Link
               href={detailHref}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink"
+              className="inline-flex items-center justify-center gap-1.5 rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink"
             >
               Chọn size / màu
             </Link>

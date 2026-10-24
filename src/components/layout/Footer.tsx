@@ -10,37 +10,37 @@ import { mainNav, shopConfig } from "@/lib/config";
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-ink text-paper">
+    <footer className="border-t border-line bg-paper text-ink">
       <Container className="py-12">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Cột 1: thương hiệu + liên hệ */}
           <div>
-            <p className="flex items-center gap-2 text-lg font-bold">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-paper/10">
+            <p className="font-display flex items-center gap-2 text-2xl font-semibold">
+              <span className="grid h-9 w-9 place-items-center rounded-[2px] bg-ink text-paper">
                 <Shirt className="h-5 w-5" aria-hidden />
               </span>
-              Happier <span className="-ml-1 text-accent">Shirt</span>
+              Happier <span className="-ml-1">Shirt</span>
             </p>
-            <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-paper/85">
+            <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-muted">
               <li className="flex gap-2">
-                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden />
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-ink" aria-hidden />
                 <span>{shopConfig.address}</span>
               </li>
               <li>
                 <a
                   href={shopConfig.phoneHref}
-                  className="flex gap-2 transition hover:text-white"
+                  className="flex gap-2 transition hover:text-ink"
                 >
-                  <Phone className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden />
+                  <Phone className="mt-0.5 h-5 w-5 shrink-0 text-ink" aria-hidden />
                   <span>{shopConfig.phone}</span>
                 </a>
               </li>
               <li>
                 <a
                   href={shopConfig.emailHref}
-                  className="flex gap-2 transition hover:text-white"
+                  className="flex gap-2 transition hover:text-ink"
                 >
-                  <Mail className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden />
+                  <Mail className="mt-0.5 h-5 w-5 shrink-0 text-ink" aria-hidden />
                   <span>{shopConfig.email}</span>
                 </a>
               </li>
@@ -49,15 +49,15 @@ export default function Footer() {
 
           {/* Cột 2: giờ mở cửa */}
           <div>
-            <h2 className="flex items-center gap-2 text-base font-semibold">
-              <Clock className="h-5 w-5 text-accent" aria-hidden />
+            <h2 className="font-display flex items-center gap-2 text-xl font-semibold">
+              <Clock className="h-5 w-5 text-ink" aria-hidden />
               Giờ mở cửa
             </h2>
-            <ul className="mt-4 space-y-3 text-[15px] text-paper/85">
+            <ul className="mt-4 space-y-3 text-[15px] text-muted">
               {shopConfig.openingHours.map((row) => (
                 <li key={row.days} className="flex flex-col">
                   <span>{row.days}</span>
-                  <span className="font-medium text-paper">{row.hours}</span>
+                  <span className="font-medium text-ink">{row.hours}</span>
                 </li>
               ))}
             </ul>
@@ -65,13 +65,13 @@ export default function Footer() {
 
           {/* Cột 3: điều hướng */}
           <div>
-            <h2 className="text-base font-semibold">Khám phá</h2>
+            <h2 className="font-display text-xl font-semibold">Khám phá</h2>
             <ul className="mt-4 space-y-3 text-[15px]">
               {mainNav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-paper/85 transition hover:text-white hover:underline hover:decoration-accent hover:underline-offset-4"
+                    className="text-muted transition hover:text-ink hover:underline hover:decoration-ink hover:underline-offset-4"
                   >
                     {item.label}
                   </Link>
@@ -80,7 +80,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/gio-hang"
-                  className="text-paper/85 transition hover:text-white hover:underline hover:decoration-accent hover:underline-offset-4"
+                  className="text-muted transition hover:text-ink hover:underline hover:decoration-ink hover:underline-offset-4"
                 >
                   Giỏ hàng
                 </Link>
@@ -90,8 +90,8 @@ export default function Footer() {
 
           {/* Cột 4: mạng xã hội */}
           <div>
-            <h2 className="text-base font-semibold">Theo dõi shop</h2>
-            <p className="mt-4 text-[15px] leading-relaxed text-paper/85">
+            <h2 className="font-display text-xl font-semibold">Theo dõi shop</h2>
+            <p className="mt-4 text-[15px] leading-relaxed text-muted">
               Cập nhật sản phẩm mới và ưu đãi trên các kênh của {shopConfig.name}.
             </p>
             <ul className="mt-4 flex flex-wrap gap-2">
@@ -101,7 +101,7 @@ export default function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex rounded-full border border-paper/30 px-4 py-2 text-sm font-medium transition hover:border-accent hover:bg-accent hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="inline-flex rounded-[2px] border border-line px-4 py-2 text-sm font-medium transition hover:border-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
                   >
                     {social.label}
                   </a>
@@ -111,7 +111,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-paper/15 pt-6 text-sm text-paper/70">
+        <div className="mt-10 border-t border-line pt-6 text-sm text-muted">
           <p>
             © {year} {shopConfig.name}. Mọi quyền được bảo lưu.
           </p>

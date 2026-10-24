@@ -22,7 +22,7 @@ export default function CatalogLoading() {
           ))}
         </div>
         <div className="mb-6 h-8 w-40 animate-pulse rounded bg-line/50" />
-        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
           {Array.from({ length: 8 }).map((_, index) => (
             <ProductCardSkeleton key={index} />
           ))}

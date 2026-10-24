@@ -90,8 +90,8 @@ export default async function ProductDetailPage({
     console.error("Không tải được chi tiết sản phẩm:", error);
     return (
       <Container className="py-10 md:py-14">
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-surface px-6 py-12 text-center">
-          <Shirt className="h-10 w-10 text-accent" aria-hidden />
+        <div className="flex flex-col items-center gap-3 rounded-[2px] border border-dashed border-line bg-surface px-6 py-12 text-center">
+          <Shirt className="h-10 w-10 text-ink" aria-hidden />
           <p className="font-medium text-ink">
             Chưa tải được thông tin sản phẩm
           </p>
@@ -123,7 +123,7 @@ export default async function ProductDetailPage({
 
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         {/* Ảnh lớn bên trái */}
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-line/40">
+        <div className="relative aspect-[3/4] overflow-hidden bg-line/40">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -142,12 +142,12 @@ export default async function ProductDetailPage({
             </span>
           )}
           {product.isFeatured && (
-            <span className="absolute top-4 left-4 rounded-full bg-accent px-3 py-1 text-xs font-medium text-white">
+            <span className="absolute top-4 left-4 rounded-[2px] bg-ink px-3 py-1 text-xs font-medium text-white">
               Nổi bật
             </span>
           )}
           {!product.isAvailable && (
-            <span className="absolute top-4 right-4 rounded-full bg-error px-3 py-1 text-xs font-medium text-white">
+            <span className="absolute top-4 right-4 rounded-[2px] bg-error px-3 py-1 text-xs font-medium text-white">
               Hết hàng
             </span>
           )}
@@ -157,11 +157,11 @@ export default async function ProductDetailPage({
         <div className="flex flex-col items-start gap-4">
           <Link
             href={`/san-pham?danh-muc=${categorySlug}`}
-            className="inline-flex items-center rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink transition hover:border-accent hover:text-cta"
+            className="inline-flex items-center rounded-[2px] border border-line bg-surface px-3 py-1 text-xs font-medium text-ink transition hover:border-ink hover:text-cta"
           >
             {categoryName}
           </Link>
-          <h1 className="text-3xl font-bold text-ink md:text-4xl md:leading-[1.2]">
+          <h1 className="font-display text-4xl font-semibold text-ink md:text-5xl">
             {product.name}
           </h1>
           {product.description && (
@@ -169,7 +169,7 @@ export default async function ProductDetailPage({
               {product.description}
             </p>
           )}
-          <p className="text-2xl font-bold text-accent">
+          <p className="text-2xl font-bold text-ink">
             {(() => {
               const r = productPriceRange({ ...product, variants: detail.variants });
               return r.min !== r.max
@@ -199,10 +199,10 @@ export default async function ProductDetailPage({
       {/* Sản phẩm cùng danh mục */}
       {related.length > 0 && (
         <section className="mt-14 md:mt-16" aria-label="Sản phẩm cùng danh mục">
-          <h2 className="mb-6 text-2xl font-bold text-ink">
+          <h2 className="font-display mb-8 text-3xl font-semibold text-ink">
             Sản phẩm cùng danh mục {categoryName}
           </h2>
-          <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
             {related.map((item) => (
               <ProductCard key={item.id} product={item} />
             ))}

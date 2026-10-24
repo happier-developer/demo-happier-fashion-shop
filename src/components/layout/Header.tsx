@@ -57,10 +57,10 @@ function NavLink({
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`rounded-full px-3 py-2 text-[15px] transition duration-state ease-standard active:scale-[0.97] ${
+      className={`px-3 py-2 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
         active
-          ? "font-semibold text-ink underline decoration-accent decoration-2 underline-offset-8"
-          : "text-muted hover:bg-line/50 hover:text-ink active:bg-line/60"
+          ? "font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
+          : "text-muted hover:text-ink"
       }`}
     >
       {label}
@@ -95,20 +95,20 @@ function HeaderInner() {
   const showBadge = hydrated && totalQuantity > 0;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-line bg-paper">
       <Container>
-        <div className="flex h-16 items-center justify-between gap-3">
+        <div className="flex h-14 items-center justify-between gap-3">
           {/* Logo (chữ — logo thật thay ở HAP-20) */}
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2"
             aria-label={`${shopConfig.name} — Trang chủ`}
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-paper">
+            <span className="grid h-9 w-9 place-items-center rounded-[2px] bg-ink text-paper">
               <Shirt className="h-5 w-5" aria-hidden />
             </span>
-            <span className="text-xl font-bold whitespace-nowrap text-ink">
-              Happier <span className="text-accent">Shirt</span>
+            <span className="font-display text-2xl font-semibold whitespace-nowrap text-ink">
+              Happier Shirt
             </span>
           </Link>
 
@@ -136,7 +136,7 @@ function HeaderInner() {
                   ? `Giỏ hàng, ${totalQuantity} sản phẩm`
                   : "Giỏ hàng"
               }
-              className="relative rounded-full p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+              className="relative rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
             >
               <ShoppingCart className="h-6 w-6" aria-hidden />
               {showBadge && (
@@ -153,7 +153,7 @@ function HeaderInner() {
               <Link
                 href="/admin"
                 aria-label="Quản trị — mở Dashboard admin"
-                className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-2 text-[15px] font-medium text-paper transition duration-state ease-standard active:scale-[0.97] hover:bg-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta sm:px-4"
+                className="inline-flex items-center gap-2 rounded-[2px] bg-ink px-3 py-2 text-[15px] font-medium text-paper transition duration-state ease-standard active:scale-[0.97] hover:bg-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta sm:px-4"
               >
                 <LayoutDashboard className="h-5 w-5 shrink-0" aria-hidden />
                 <span className="hidden sm:inline">Quản trị</span>
@@ -168,7 +168,7 @@ function HeaderInner() {
                   ? `Tài khoản của ${sessionUser.name || sessionUser.email}`
                   : "Tài khoản — đăng nhập"
               }
-              className="inline-flex max-w-44 items-center gap-2 rounded-full border border-ink/25 px-3 py-2 text-[15px] font-medium text-ink transition duration-state ease-standard active:scale-[0.97] hover:border-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta sm:max-w-56 sm:px-4"
+              className="inline-flex max-w-44 items-center gap-2 rounded-[2px] border border-ink/25 px-3 py-2 text-[15px] font-medium text-ink transition duration-state ease-standard active:scale-[0.97] hover:border-ink hover:bg-ink hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta sm:max-w-56 sm:px-4"
             >
               <User className="h-5 w-5 shrink-0" aria-hidden />
               <span className="hidden truncate sm:inline">
@@ -178,7 +178,7 @@ function HeaderInner() {
 
             <button
               type="button"
-              className="rounded-full p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta md:hidden"
+              className="rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta md:hidden"
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav"
               aria-label={mobileOpen ? "Đóng sản phẩm" : "Mở sản phẩm"}
@@ -208,7 +208,7 @@ function HeaderInner() {
                   <Link
                     href="/admin"
                     onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-2 rounded-xl px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
+                    className="flex items-center gap-2 rounded-[2px] px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
                   >
                     <LayoutDashboard className="h-5 w-5" aria-hidden />
                     Quản trị — Dashboard
@@ -223,9 +223,9 @@ function HeaderInner() {
                     aria-current={
                       isActive(pathname, item.href) ? "page" : undefined
                     }
-                    className={`block rounded-xl px-3 py-3 text-base transition duration-state ease-standard active:bg-line/60 ${
+                    className={`block rounded-[2px] px-3 py-3 text-base transition duration-state ease-standard active:bg-line/60 ${
                       isActive(pathname, item.href)
-                        ? "bg-ink/5 font-semibold text-ink underline decoration-accent decoration-2 underline-offset-8"
+                        ? "bg-ink/5 font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
                         : "text-muted hover:bg-line/50 hover:text-ink"
                     }`}
                   >
