@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Shirt,
   CreditCard,
-  MapPin,
   PackageCheck,
   ShoppingBag,
 } from "lucide-react";
@@ -15,6 +14,7 @@ import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
+import { formatVnd } from "@/lib/format";
 import type { Product } from "@/lib/db/schema";
 import { getFeaturedProducts } from "@/lib/products/catalog";
 
@@ -108,47 +108,101 @@ function FeaturedProductsSkeleton() {
   );
 }
 
+// Ảnh editorial 3:4 của hero: sản phẩm nổi bật đầu tiên từ catalogue
+// (cùng cache `catalog` như lưới bên dưới, không thêm nguồn dữ liệu).
+// Cố ý KHÔNG gắn viewTransitionName/data-morph ở đây: ảnh này và thẻ
+// sản phẩm cùng slug bên dưới sẽ trùng tên transition nếu gắn cả hai,
+// nên morph card→detail giữ nguyên cho lưới sản phẩm.
+// Khi DB lỗi hoặc chưa có sản phẩm nổi bật: dùng ảnh hero của shop.
+async function HeroProductVisual() {
+  const featured = await loadFeaturedProducts();
+  const product = featured.find((item) => Boolean(item.imageUrl));
+
+  if (!product || !product.imageUrl) {
+    return (
+      <div className="relative aspect-[3/4] overflow-hidden bg-line/40">
+        <Image
+          src={shopConfig.heroImage}
+          alt="Không gian shop"
+          fill
+          priority
+          fetchPriority="high"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <figure>
+      <Link
+        href={`/san-pham/${product.slug}`}
+        className="relative block aspect-[3/4] overflow-hidden bg-line/40"
+        aria-label={product.name}
+      >
+        <Image
+          src={product.imageUrl}
+          alt={product.name}
+          fill
+          priority
+          fetchPriority="high"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-cover"
+        />
+      </Link>
+      <figcaption className="flex items-baseline justify-between gap-4 pt-4">
+        <Link
+          href={`/san-pham/${product.slug}`}
+          className="font-display text-lg font-semibold text-ink transition hover:text-cta"
+        >
+          {product.name}
+        </Link>
+        <span className="shrink-0 font-bold text-ink">
+          {formatVnd(product.priceVnd)}
+        </span>
+      </figcaption>
+    </figure>
+  );
+}
+
+function HeroVisualSkeleton() {
+  return <div aria-hidden className="aspect-[3/4] bg-line/40" />;
+}
+
 export default function HomePage() {
   return (
     <>
-      {/* ---------- Hero (DESIGN.md v2 — Editorial, typography-led) ---------- */}
+      {/* ---------- Hero (Editorial, product-led) ----------
+          Masthead ở header đã là khối thương hiệu (wordmark + tagline),
+          nên hero KHÔNG lặp lại tên shop, tagline hay địa chỉ nữa.
+          Hero là điểm bắt đầu mua sắm: headline editorial + mô tả +
+          2 CTA giữ nguyên + ảnh sản phẩm nổi bật 3:4. */}
       <section>
-        <Container className="flex flex-col items-center gap-6 py-14 text-center md:py-20">
-          <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
-            {shopConfig.tagline}
-          </p>
-          <h1 className="font-display max-w-3xl text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
-            {shopConfig.name}
-          </h1>
-          <p className="max-w-xl text-base leading-relaxed text-muted">
-            {shopConfig.description}
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button href="/san-pham" variant="primary">
-              Xem sản phẩm
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Button>
-            <Button href="/san-pham" variant="secondary">
-              Đặt hàng ngay
-            </Button>
+        <Container className="grid items-center gap-10 py-14 md:grid-cols-2 md:py-20">
+          <div className="flex flex-col items-start gap-6">
+            <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
+              Áo · Quần · Váy · Áo khoác
+            </p>
+            <h1 className="font-display text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
+              Tối giản, vừa vặn, dễ phối.
+            </h1>
+            <p className="max-w-xl text-base leading-relaxed text-muted">
+              {shopConfig.description}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button href="/san-pham" variant="primary">
+                Xem sản phẩm
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Button>
+              <Button href="/san-pham" variant="secondary">
+                Đặt hàng ngay
+              </Button>
+            </div>
           </div>
-          <p className="inline-flex items-center gap-1.5 text-sm text-muted">
-            <MapPin className="h-4 w-4" aria-hidden />
-            {shopConfig.address}
-          </p>
-        </Container>
-        <Container>
-          <div className="relative aspect-[16/9] overflow-hidden bg-line/40">
-            <Image
-              src={shopConfig.heroImage}
-              alt={`Không gian shop ${shopConfig.name}`}
-              fill
-              priority
-              fetchPriority="high"
-              sizes="100vw"
-              className="object-cover"
-            />
-          </div>
+          <Suspense fallback={<HeroVisualSkeleton />}>
+            <HeroProductVisual />
+          </Suspense>
         </Container>
       </section>
 
