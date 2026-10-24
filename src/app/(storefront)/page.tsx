@@ -135,29 +135,26 @@ async function HeroProductVisual() {
     );
   }
 
-  // Sản phẩm jeans: ảnh cutout nền trong suốt trên vòng tròn be (CSS) để
-  // nền SmokeFlow của hero lộ ra xung quanh vòng tròn — caption tên/giá
-  // đã bỏ theo yêu cầu, chỉ còn ảnh liên kết tới trang chi tiết.
+  // Sản phẩm jeans: ảnh do chính Duy gửi — mẫu ngồi ghế trong vòng tròn
+  // hồng kèm doodle, nền đen baked sẵn. KHÔNG tách nền (key nền đen sẽ
+  // thủng cả mũ len/áo đen của mẫu, AI tách thì mất vòng tròn và doodle)
+  // — dùng đúng ảnh gốc, tỉ lệ tự nhiên 1218/1291, không crop.
   if (product.slug === "quan-jeans-ong-dung") {
     return (
       <Link
         href={`/san-pham/${product.slug}`}
-        className="relative block aspect-[3/4]"
+        className="block"
         aria-label={product.name}
       >
-        <div
-          aria-hidden
-          className="absolute left-1/2 top-1/2 aspect-square w-full -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ backgroundColor: "#cdb39b" }}
-        />
         <Image
-          src="/images/quan-jeans-model-cutout.png"
+          src="/images/hero-model-pink-circle.jpg"
           alt={product.name}
-          fill
+          width={1218}
+          height={1291}
           priority
           fetchPriority="high"
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="hero-zoom object-contain"
+          className="hero-zoom h-auto w-full"
         />
       </Link>
     );
