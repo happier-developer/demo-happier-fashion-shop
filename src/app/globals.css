@@ -283,17 +283,19 @@ body {
     transform: scaleX(1);
   }
 
-  /* Nút/CTA: nâng nhẹ + bóng mềm; màu đậm đã có ở variant (hover:bg-ink
-     ...), press-scale (active:scale) và ripple giữ nguyên vì chúng dùng
-     thuộc tính scale / phần tử riêng, không xung đột với transform. */
+  /* Nút/CTA: nâng rõ + bóng mềm đậm hơn để nhìn thấy được trên nền
+     trắng trong ảnh chụp tĩnh; nút đen đã tối đa nên không đổi màu nền.
+     press-scale (active:scale) và ripple giữ nguyên vì chúng dùng thuộc
+     tính scale / phần tử riêng, không xung đột với transform. */
   .btn-lift:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgb(17 17 17 / 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgb(17 17 17 / 0.18);
   }
 
-  /* Ảnh hero trang chủ: zoom rất nhẹ, chậm. */
+  /* Ảnh hero trang chủ: zoom nhẹ, chậm (tăng từ 1.03 để phân biệt được
+     trạng thái hover với không hover). */
   .hero-zoom:hover {
-    transform: scale(1.03);
+    transform: scale(1.05);
   }
 
   /* Tiêu đề thẻ + tiêu đề ảnh hero: gạch chân quét ngang mềm, chạy
