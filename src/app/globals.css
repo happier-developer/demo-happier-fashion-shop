@@ -29,6 +29,13 @@
   --animate-pop: pop var(--duration-enter) var(--ease-standard);
   --animate-pop-soft: pop-soft var(--duration-state) var(--ease-standard);
 
+  /* Micro-interactions v2.2: fade-in khi đổi bộ lọc (lưới kết quả
+     remount theo key bộ lọc nên animation chạy lại mỗi lần đổi lọc);
+     zoom-pulse cho ảnh sản phẩm khi bấm tim. Cả hai chỉ animate
+     opacity/transform — không gây layout shift. */
+  --animate-fade-in: fade-in var(--duration-enter) var(--ease-standard);
+  --animate-zoom-pulse: zoom-pulse 300ms var(--ease-standard);
+
   @keyframes pop {
     0% {
       transform: scale(0.4);
@@ -44,6 +51,29 @@
   @keyframes pop-soft {
     0% {
       transform: scale(0.75);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes zoom-pulse {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.06);
     }
     100% {
       transform: scale(1);
