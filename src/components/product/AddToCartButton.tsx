@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Check, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart/cart-context";
 import QuantityStepper from "./QuantityStepper";
@@ -32,6 +32,10 @@ interface AddToCartButtonProps {
 
 const ADD_LOCK_MS = 400;
 
+// Tia hạt mực bung khi thêm giỏ (click effect v2.3): 8 hạt tỏa đều theo
+// góc, bay ra rồi tan dần — chỉ đổi hiển thị, không chạm logic giỏ.
+const BURST_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+
 export default function AddToCartButton({
   productId,
   variantId,
@@ -52,6 +56,36 @@ export default function AddToCartButton({
   // chống bấm đúp 400ms giữ nguyên.
   const [justAdded, setJustAdded] = useState(false);
   const justAddedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Lớp tia hạt: key theo lần bấm để animation chạy lại mỗi lần thêm;
+  // lớp này nằm trong wrapper bền qua cả trạng thái tick "Đã thêm"
+  // (700ms < 1200ms) nên hạt không bị unmount giữa chừng khi nút đổi
+  // trạng thái. Wrapper dùng overflow visible để hạt bay ra ngoài nút,
+  // trong khi bản thân nút vẫn overflow-hidden cho ripple.
+  const [burstKey, setBurstKey] = useState(0);
+  const burstTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
+    },
+    [],
+  );
+  const burstLayer =
+    burstKey > 0 ? (
+      <span
+        key={burstKey}
+        className="pointer-events-none absolute inset-0 z-10"
+        aria-hidden
+      >
+        {BURST_ANGLES.map((angle) => (
+          <span
+            key={angle}
+            className="burst-dot"
+            style={{ "--burst-angle": `${angle}deg` } as CSSProperties}
+          />
+        ))}
+      </span>
+    ) : null;
   useEffect(
     () => () => {
       if (justAddedTimerRef.current) clearTimeout(justAddedTimerRef.current);
@@ -66,16 +100,19 @@ export default function AddToCartButton({
 
   if (justAdded) {
     return (
-      <button
-        type="button"
-        disabled
-        className="inline-flex items-center justify-center gap-1.5 rounded-[2px] bg-success px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white disabled:pointer-events-none disabled:opacity-100"
-      >
-        <span key="tick" className="inline-flex animate-pop">
-          <Check className="h-4 w-4" aria-hidden />
-        </span>
-        Đã thêm
-      </button>
+      <span className="relative inline-flex">
+        <button
+          type="button"
+          disabled
+          className="inline-flex items-center justify-center gap-1.5 rounded-[2px] bg-success px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white disabled:pointer-events-none disabled:opacity-100"
+        >
+          <span key="tick" className="inline-flex animate-pop">
+            <Check className="h-4 w-4" aria-hidden />
+          </span>
+          Đã thêm
+        </button>
+        {burstLayer}
+      </span>
     );
   }
 
@@ -101,19 +138,28 @@ export default function AddToCartButton({
       { productId, variantId, variantLabel, slug, name, priceVnd, imageUrl },
       quantity,
     );
+    setBurstKey((key) => key + 1);
+    // Gỡ lớp hạt sau khi animation xong (750ms > 700ms) để lần sau nút
+    // thêm hiện lại (ví dụ số lượng về 0) không phát lại tia hạt cũ.
+    if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
+    burstTimerRef.current = setTimeout(() => setBurstKey(0), 750);
     setJustAdded(true);
     justAddedTimerRef.current = setTimeout(() => setJustAdded(false), 1200);
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={disabled}
-      className="inline-flex items-center justify-center gap-1.5 rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50"
-    >
-      <ShoppingCart className="h-4 w-4" aria-hidden />
-      Thêm vào giỏ
-    </button>
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={disabled}
+        data-ripple
+        className="relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta disabled:pointer-events-none disabled:opacity-50"
+      >
+        <ShoppingCart className="h-4 w-4" aria-hidden />
+        Thêm vào giỏ
+      </button>
+      {burstLayer}
+    </span>
   );
 }
