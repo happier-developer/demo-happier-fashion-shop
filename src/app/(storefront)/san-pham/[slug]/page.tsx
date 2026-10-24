@@ -189,9 +189,9 @@ export default async function ProductDetailPage({
             />
           </div>
           <p className="text-sm leading-relaxed text-muted">
-            Đặt online để shop chuẩn bị sẵn, hoặc ghé shop thưởng thức trực
-            tiếp. Thanh toán bằng chuyển khoản VietQR hoặc tiền mặt khi nhận
-            sản phẩm (COD).
+            Đặt online để shop chuẩn bị sẵn và giao nhanh tận nơi. Thanh
+            toán bằng chuyển khoản VietQR hoặc tiền mặt khi nhận sản phẩm
+            (COD).
           </p>
         </div>
       </div>
