@@ -80,7 +80,7 @@ async function fetchFeaturedProducts(): Promise<ProductWithVariants[]> {
     .from(products)
     .where(and(eq(products.isFeatured, true), eq(products.isAvailable, true)))
     .orderBy(asc(products.sortOrder), asc(products.name))
-    .limit(8);
+    .limit(12);
   return attachVariants(rows);
 }
 

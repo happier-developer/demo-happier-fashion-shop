@@ -14,6 +14,7 @@ import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
 import SmokeFlowHeroBackground from "@/components/home/SmokeFlowHeroBackground";
 import CollectionSections from "@/components/home/CollectionSections";
+import HotDealCarousel from "@/components/home/HotDealCarousel";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
 import type { Product } from "@/lib/db/schema";
@@ -88,11 +89,11 @@ async function FeaturedProductsGrid() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
+    <HotDealCarousel>
       {featured.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
-    </div>
+    </HotDealCarousel>
   );
 }
 
@@ -230,7 +231,7 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* ---------- Sản phẩm nổi bật (dữ liệu thật từ DB) ---------- */}
+      {/* ---------- Happier Hot Deal (dữ liệu thật từ DB) ---------- */}
       <section className="py-4 md:py-8">
         <Container>
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
@@ -239,7 +240,7 @@ export default function HomePage() {
                 Tuyển chọn
               </p>
               <h2 className="font-display text-3xl font-semibold text-ink md:text-4xl">
-                Sản phẩm nổi bật
+                Happier Hot Deal
               </h2>
               <p className="mt-2 text-base text-muted">
                 Những sản phẩm được yêu thích nhất tại {shopConfig.name}.
