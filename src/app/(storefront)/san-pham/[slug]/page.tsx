@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Shirt } from "lucide-react";
 import Container from "@/components/ui/Container";
+import DetailProductImage from "@/components/product/DetailProductImage";
 import ProductCard from "@/components/product/ProductCard";
 import ProductPurchase from "@/components/product/ProductPurchase";
 import { getDb } from "@/lib/db";
@@ -125,41 +124,15 @@ export default async function ProductDetailPage({
       <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
         {/* Ảnh lớn bên trái — đích morph của ảnh thẻ cùng slug
             (click effect v2.3); fade-in làm hiệu ứng vào trang khi
-            trình duyệt không hỗ trợ View Transitions. */}
-        <div className="animate-fade-in relative aspect-[3/4] overflow-hidden bg-line/40">
-          {product.imageUrl ? (
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              priority
-              fetchPriority="high"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              style={
-                {
-                  viewTransitionName: `product-hero-${product.slug}`,
-                } as CSSProperties
-              }
-              className={`object-cover ${
-                product.isAvailable ? "" : "grayscale"
-              }`}
-            />
-          ) : (
-            <span className="flex h-full items-center justify-center text-muted">
-              <Shirt className="h-16 w-16" aria-hidden />
-            </span>
-          )}
-          {product.isFeatured && (
-            <span className="absolute top-4 left-4 rounded-[2px] bg-ink px-3 py-1 text-xs font-medium text-white">
-              Nổi bật
-            </span>
-          )}
-          {!product.isAvailable && (
-            <span className="absolute top-4 right-4 rounded-[2px] bg-error px-3 py-1 text-xs font-medium text-white">
-              Hết hàng
-            </span>
-          )}
-        </div>
+            trình duyệt không hỗ trợ View Transitions. Bấm vào ảnh mở
+            lightbox (v2.4, zoom chuột + nút + kéo). */}
+        <DetailProductImage
+          imageUrl={product.imageUrl}
+          name={product.name}
+          slug={product.slug}
+          isFeatured={product.isFeatured}
+          isAvailable={product.isAvailable}
+        />
 
         {/* Thông tin + mua hàng bên phải */}
         <div className="flex flex-col items-start gap-4">
