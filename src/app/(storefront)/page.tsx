@@ -129,7 +129,7 @@ async function HeroProductVisual() {
           priority
           fetchPriority="high"
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover"
+          className="hero-zoom object-cover"
         />
       </div>
     );
@@ -149,13 +149,13 @@ async function HeroProductVisual() {
           priority
           fetchPriority="high"
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover"
+          className="hero-zoom object-cover"
         />
       </Link>
       <figcaption className="flex items-baseline justify-between gap-4 pt-4">
         <Link
           href={`/san-pham/${product.slug}`}
-          className="font-display text-lg font-semibold text-ink transition hover:text-cta"
+          className="title-sweep font-display text-lg font-semibold text-ink transition hover:text-cta"
         >
           {product.name}
         </Link>

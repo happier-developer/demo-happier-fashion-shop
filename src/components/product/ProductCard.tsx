@@ -40,7 +40,7 @@ export default function ProductCard({
       : formatVnd(product.priceVnd);
 
   return (
-    <article className="group flex flex-col bg-surface transition-transform duration-state ease-standard active:scale-[0.99]">
+    <article className="product-card flex flex-col bg-surface active:scale-[0.99]">
       {/* Vùng ảnh: nút tim nằm ngoài Link ảnh để bấm tim không điều
           hướng sang trang chi tiết; badge Nổi bật/Hết hàng vẫn trong Link. */}
       <div className="relative">
@@ -63,7 +63,7 @@ export default function ProductCard({
                   viewTransitionName: `product-hero-${product.slug}`,
                 } as CSSProperties
               }
-              className={`object-cover transition duration-300 group-hover:scale-105 ${
+              className={`product-card-image object-cover ${
                 inStock ? "" : "grayscale"
               }`}
             />
@@ -91,7 +91,7 @@ export default function ProductCard({
         <Link
           href={detailHref}
           data-morph
-          className="font-display line-clamp-1 text-lg font-semibold text-ink transition hover:text-cta"
+          className="title-sweep font-display line-clamp-1 text-lg font-semibold text-ink transition hover:text-cta"
         >
           {product.name}
         </Link>
@@ -107,7 +107,7 @@ export default function ProductCard({
               href={detailHref}
               data-morph
               data-ripple
-              className="relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink"
+              className="btn-lift relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-[2px] bg-cta px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white transition duration-state ease-standard active:scale-[0.97] hover:bg-ink"
             >
               Chọn size / màu
             </Link>

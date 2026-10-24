@@ -24,7 +24,7 @@ export default function QuickViewButton({
         onClick={() => setOpen(true)}
         aria-label={`Xem nhanh ${product.name}`}
         data-ripple
-        className="absolute bottom-3 left-3 z-10 grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-line bg-paper/90 text-ink opacity-0 shadow-sm transition duration-state ease-standard group-hover:opacity-100 focus-visible:opacity-100 active:scale-90 hover:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta [@media(hover:none)]:opacity-100"
+        className="quick-view-btn absolute bottom-3 left-3 z-10 grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-line bg-paper/90 text-ink opacity-0 shadow-sm transition duration-state ease-standard focus-visible:opacity-100 active:scale-90 hover:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta [@media(hover:none)]:opacity-100"
       >
         <Eye className="h-5 w-5" aria-hidden />
       </button>

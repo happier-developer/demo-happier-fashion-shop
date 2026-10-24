@@ -61,7 +61,7 @@ function NavLink({
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`px-5 py-3 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
+      className={`nav-sweep px-5 py-3 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
         active
           ? "font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
           : "text-muted hover:text-ink"
