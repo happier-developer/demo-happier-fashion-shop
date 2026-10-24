@@ -1,3 +1,5 @@
+"use client";
+
 // Footer storefront dạng TẠP CHÍ (khác hẳn cấu trúc 4 cột đều + khối
 // tối của Happier Coffee): wordmark serif khổ lớn mở đầu, rồi lưới
 // lệch 12 cột — mục lục đánh số kiểu index, khối liên hệ trình bày
@@ -7,9 +9,103 @@
 // không đổi nội dung: địa chỉ, điện thoại, email, giờ mở cửa giữ nguyên).
 
 import Link from "next/link";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { ArrowUp, ArrowUpRight } from "lucide-react";
 import Container from "@/components/ui/Container";
 import { mainNav, shopConfig } from "@/lib/config";
+
+/** Same brand-click ink splash as the header masthead wordmark (see
+ *  Header.tsx): droplets + ripple ring at the click point, and a
+ *  "happier-brand-splash" event so the homepage hero blob splashes too.
+ *  Navigation to "/" is untouched — the handler never prevents default;
+ *  skipped entirely under prefers-reduced-motion. */
+const BRAND_SPLASH_EVENT = "happier-brand-splash";
+
+type Burst = { id: number; x: number; y: number };
+
+function BrandSplash({
+  burst,
+  onDone,
+}: {
+  burst: Burst;
+  onDone: (id: number) => void;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const droplets =
+      Array.from(el.querySelectorAll<HTMLElement>("[data-droplet]"));
+    const ring = el.querySelector<HTMLElement>("[data-ring]");
+    const animations: Animation[] = [];
+    droplets.forEach((d, i) => {
+      const angle = (i / droplets.length) * Math.PI * 2;
+      const dist = 26 + (i % 3) * 10;
+      animations.push(
+        d.animate(
+          [
+            {
+              transform: "translate(-50%, -50%) scale(0.4)",
+              opacity: 1,
+            },
+            {
+              transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(1)`,
+              opacity: 0,
+            },
+          ],
+          {
+            duration: 750,
+            easing: "cubic-bezier(0.2, 0, 0, 1)",
+            fill: "forwards",
+          },
+        ),
+      );
+    });
+    if (ring) {
+      animations.push(
+        ring.animate(
+          [
+            { transform: "translate(-50%, -50%) scale(0.25)", opacity: 0.7 },
+            { transform: "translate(-50%, -50%) scale(1)", opacity: 0 },
+          ],
+          { duration: 800, easing: "ease-out", fill: "forwards" },
+        ),
+      );
+    }
+    const timer = window.setTimeout(() => onDone(burst.id), 850);
+    return () => {
+      window.clearTimeout(timer);
+      animations.forEach((a) => a.cancel());
+    };
+  }, [burst, onDone]);
+  return (
+    <span
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute z-[60]"
+      style={{ left: burst.x, top: burst.y }}
+    >
+      <span
+        data-ring
+        className="absolute h-24 w-24 rounded-full border-2 border-ink"
+        style={{ transform: "translate(-50%, -50%)" }}
+      />
+      {Array.from({ length: 8 }).map((_, i) => (
+        <span
+          key={i}
+          data-droplet
+          className="absolute bg-ink"
+          style={{
+            width: 6 + (i % 3) * 2,
+            height: 6 + (i % 3) * 2,
+            borderRadius: "58% 42% 55% 45% / 55% 48% 52% 45%",
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      ))}
+    </span>
+  );
+}
 
 const indexLinks = [
   ...mainNav,
@@ -18,18 +114,43 @@ const indexLinks = [
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const [bursts, setBursts] = useState<Burst[]>([]);
+  const burstIdRef = useRef(0);
+  const removeBurst = useCallback(
+    (id: number) => setBursts((prev) => prev.filter((b) => b.id !== id)),
+    [],
+  );
+  const handleBrandClick = (e: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX ? e.clientX - rect.left : rect.width / 2;
+    const y = e.clientY ? e.clientY - rect.top : rect.height / 2;
+    burstIdRef.current += 1;
+    setBursts((prev) => [...prev, { id: burstIdRef.current, x, y }]);
+    window.dispatchEvent(new CustomEvent(BRAND_SPLASH_EVENT));
+  };
   return (
     <footer className="border-t border-line bg-paper text-ink">
       <Container className="pt-12 pb-8">
         {/* Wordmark khổ lớn + viền đôi — mở đầu footer như trang bìa. */}
         <div className="border-b-[3px] border-double border-line pb-8">
-          <Link
-            href="/"
-            aria-label={`${shopConfig.name} — Trang chủ`}
-            className="font-display text-5xl leading-none font-semibold tracking-tight text-ink md:text-7xl"
-          >
-            Happier Fashion
-          </Link>
+          <span className="relative inline-block">
+            <Link
+              href="/"
+              onClick={handleBrandClick}
+              aria-label={`${shopConfig.name} — Trang chủ`}
+              className="font-display text-5xl leading-none font-semibold tracking-tight text-ink md:text-7xl"
+            >
+              Happier Fashion
+            </Link>
+            {bursts.map((burst) => (
+              <BrandSplash
+                key={burst.id}
+                burst={burst}
+                onDone={removeBurst}
+              />
+            ))}
+          </span>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
             {shopConfig.tagline} — {shopConfig.description}
           </p>

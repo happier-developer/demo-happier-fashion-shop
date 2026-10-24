@@ -4,73 +4,87 @@ import { useEffect, useRef } from "react";
 import styles from "./InkPuddleLayer.module.css";
 
 /**
- * Ink-puddle blob layer for the homepage hero (desktop only).
+ * Ink-puddle layer for the homepage hero (desktop only).
  *
- * Organic amoeba blobs (morphing border-radius, ink #111, translucent)
- * that follow the cursor with smooth lag and fade out when the cursor
- * leaves the hero. Decorative only: pointer-events:none, rendered BEHIND
- * the hero content, so headline/CTAs/product image stay fully clickable.
+ * Exactly ONE organic liquid blob (morphing border-radius, ink #111,
+ * translucent) that follows the cursor with smooth lag and fades out
+ * when the cursor leaves the hero. Decorative only: pointer-events:none,
+ * rendered BEHIND the hero content, so headline/CTAs/product image stay
+ * fully clickable.
+ *
+ * Brand-click splash: the header/footer "Happier Fashion" wordmark
+ * dispatches a "happier-brand-splash" window event on click. When this
+ * layer is mounted (i.e. on the homepage) the blob answers with a quick
+ * scale-up + faster morph, then settles back and fades out again unless
+ * the cursor has moved into the hero meanwhile.
  *
  * Desktop gating: only activates on fine pointers + >=1024px width, and
  * renders nothing at all under prefers-reduced-motion. On touch/mobile
  * devices the component renders null — zero effect, zero cost.
  */
 
-type BlobDef = {
-  size: number;
-  offsetX: number;
-  offsetY: number;
-  lag: number;
-  opacity: number;
-  morphClass: string;
-};
+export const BRAND_SPLASH_EVENT = "happier-brand-splash";
 
-const BLOBS: BlobDef[] = [
-  { size: 200, offsetX: 0, offsetY: -10, lag: 0.14, opacity: 0.12, morphClass: styles.morph1 },
-  { size: 150, offsetX: -80, offsetY: 40, lag: 0.09, opacity: 0.1, morphClass: styles.morph2 },
-  { size: 120, offsetX: 70, offsetY: -50, lag: 0.06, opacity: 0.08, morphClass: styles.morph3 },
-];
+const BLOB_SIZE = 220;
+const BLOB_LAG = 0.14;
+const BLOB_OPACITY = 0.12;
+const SPLASH_DURATION_MS = 800;
 
 export default function InkPuddleLayer() {
   const rootRef = useRef<HTMLDivElement>(null);
-  const blobRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const blobRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef({ x: 0, y: 0, inside: false, seen: false });
+  const splashRef = useRef(0); // performance.now() of the last splash, 0 = none
+  const moveCountRef = useRef(0);
   const rafRef = useRef<number>(0);
   const runningRef = useRef(false);
 
   useEffect(() => {
     const root = rootRef.current;
-    if (!root) return;
-    const finePointer = window.matchMedia("(pointer: fine) and (min-width: 1024px)");
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const blob = blobRef.current;
+    if (!root || !blob) return;
+    const finePointer = window.matchMedia(
+      "(pointer: fine) and (min-width: 1024px)",
+    );
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
     if (!finePointer.matches || reducedMotion.matches) return;
 
     const section = root.parentElement;
     if (!section) return;
 
-    const positions = BLOBS.map(() => ({ x: 0, y: 0 }));
+    const pos = { x: 0, y: 0 };
 
     const tick = () => {
       const t = targetRef.current;
-      const layer = root;
-      BLOBS.forEach((blob, i) => {
-        const pos = positions[i];
-        const el = blobRefs.current[i];
-        if (!el) return;
-        const tx = t.x + blob.offsetX;
-        const ty = t.y + blob.offsetY;
-        pos.x += (tx - pos.x) * blob.lag;
-        pos.y += (ty - pos.y) * blob.lag;
-        el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%)`;
-      });
+      pos.x += (t.x - pos.x) * BLOB_LAG;
+      pos.y += (t.y - pos.y) * BLOB_LAG;
+      // Splash: quick scale-up + faster morph, decaying over ~800ms.
+      const splashAge = splashRef.current
+        ? performance.now() - splashRef.current
+        : Infinity;
+      const splashFactor =
+        splashAge < SPLASH_DURATION_MS
+          ? 1 - splashAge / SPLASH_DURATION_MS
+          : 0;
+      if (splashFactor > 0) {
+        blob.style.animationDuration = "1.4s";
+        blob.style.opacity = String(BLOB_OPACITY * (1 + 0.8 * splashFactor));
+      } else {
+        blob.style.animationDuration = "";
+        blob.style.opacity = String(BLOB_OPACITY);
+      }
+      const scale = 1 + 0.7 * splashFactor;
+      blob.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) scale(${scale})`;
       // Fade the whole layer in once the cursor has entered, out on leave.
       const want = t.inside && t.seen ? 1 : 0;
-      const current = parseFloat(layer.style.opacity || "0");
+      const current = parseFloat(root.style.opacity || "0");
       const next = current + (want - current) * 0.12;
-      layer.style.opacity = String(next);
+      root.style.opacity = String(next);
       // Stop looping once fully faded out after a leave.
       if (want === 0 && next <= 0.01) {
-        layer.style.opacity = "0";
+        root.style.opacity = "0";
         runningRef.current = false;
         return;
       }
@@ -94,11 +108,35 @@ export default function InkPuddleLayer() {
       targetRef.current.y = e.clientY - rect.top;
       targetRef.current.inside = true;
       targetRef.current.seen = true;
+      moveCountRef.current += 1;
       start();
     };
     const onLeave = () => {
       targetRef.current.inside = false;
       start(); // keep ticking until faded out, then stop below
+    };
+
+    const onSplash = () => {
+      const rect = section.getBoundingClientRect();
+      if (!targetRef.current.seen) {
+        // Cursor never entered the hero: splash at the hero center so
+        // the blob appears somewhere sensible instead of a corner.
+        targetRef.current.x = rect.width / 2;
+        targetRef.current.y = rect.height / 2;
+        targetRef.current.seen = true;
+      }
+      targetRef.current.inside = true;
+      splashRef.current = performance.now();
+      // Fade back out once the splash is over, unless the cursor has
+      // moved into the hero meanwhile (then normal hover rules apply).
+      const movesAtSplash = moveCountRef.current;
+      window.setTimeout(() => {
+        if (moveCountRef.current === movesAtSplash) {
+          targetRef.current.inside = false;
+          start();
+        }
+      }, 1000);
+      start();
     };
 
     // Pause the loop when the hero is off-screen; resume on visibility.
@@ -115,15 +153,15 @@ export default function InkPuddleLayer() {
     );
     observer.observe(section);
 
-    // Stop the loop once fully faded out after a leave (handled in tick).
-
     section.addEventListener("mousemove", onMove);
     section.addEventListener("mouseleave", onLeave);
+    window.addEventListener(BRAND_SPLASH_EVENT, onSplash);
     return () => {
       stop();
       observer.disconnect();
       section.removeEventListener("mousemove", onMove);
       section.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener(BRAND_SPLASH_EVENT, onSplash);
     };
   }, []);
 
@@ -134,16 +172,11 @@ export default function InkPuddleLayer() {
       className={styles.layer}
       style={{ opacity: 0 }}
     >
-      {BLOBS.map((blob, i) => (
-        <div
-          key={i}
-          ref={(el) => {
-            blobRefs.current[i] = el;
-          }}
-          className={`${styles.blob} ${blob.morphClass}`}
-          style={{ width: blob.size, height: blob.size, opacity: blob.opacity }}
-        />
-      ))}
+      <div
+        ref={blobRef}
+        className={`${styles.blob} ${styles.morph1}`}
+        style={{ width: BLOB_SIZE, height: BLOB_SIZE, opacity: BLOB_OPACITY }}
+      />
     </div>
   );
 }
