@@ -195,7 +195,9 @@ export default function HomePage() {
               Áo · Quần · Váy · Áo khoác
             </p>
             <h1 className="font-display text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
-              Tối giản, vừa vặn, dễ phối.
+              Tối giản, tinh tế,
+              <br />
+              vượt thời gian
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-muted">
               {shopConfig.description}
