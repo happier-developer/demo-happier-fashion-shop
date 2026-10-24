@@ -122,7 +122,7 @@ const PRODUCT_SEED: ReadonlyArray<{
     description:
       "Jeans denim co giãn nhẹ, ống đứng, cạp vừa — mặc cả ngày không khó chịu.",
     priceVnd: 549000,
-    imageUrl: U("photo-1542272604-787c3835535d"),
+    imageUrl: "/images/quan-jeans-model-circle.png",
     isFeatured: true,
     sortOrder: 1,
     sizes: ["S", "M", "L", "XL"],
