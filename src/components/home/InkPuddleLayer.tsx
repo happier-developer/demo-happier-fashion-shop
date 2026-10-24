@@ -16,6 +16,13 @@ import styles from "./InkPuddleLayer.module.css";
  * strength growing with cursor speed and relaxing back when the
  * cursor stops; the morph rhythm also speeds up while moving.
  *
+ * Idle breathing: while the cursor is still, the blob gently inhales
+ * and exhales (slow scale pulse, ~6s cycle, 1.00 → ~1.06 → 1.00).
+ * Breathing amplitude is blended by (1 - speedFactor), so it fades
+ * out smoothly — never snaps — as movement resumes and the velocity
+ * deformation takes over. Idle shape variety comes from the long
+ * morph-idle keyframe sequence (5 distinct silhouettes).
+ *
  * Negative lens: while the cursor is over the hero's featured product
  * image, a blob-shaped backdrop-filter: invert(1) lens follows the
  * cursor above the image (clipped to the image bounds), so the photo
@@ -38,7 +45,7 @@ export const BRAND_SPLASH_EVENT = "happier-brand-splash";
 const BLOB_SIZE = 220;
 const LENS_SIZE = 240;
 const BLOB_LAG = 0.14;
-const BLOB_OPACITY = 0.32;
+const BLOB_OPACITY = 0.18;
 const SPLASH_DURATION_MS = 800;
 // Deformation tuning: speed is lagged-blob px per animation frame.
 const SPEED_NORM = 10; // px/frame that maps to full deformation
@@ -46,6 +53,9 @@ const MAX_STRETCH = 0.35; // +35% along travel at full speed
 const MAX_SQUASH = 0.22; // -22% perpendicular at full speed
 const MORPH_IDLE_MS = 11000;
 const MORPH_FAST_MS = 4000;
+// Idle breathing: slow scale pulse, 1.00 -> ~1.06 -> 1.00.
+const BREATH_MS = 6000;
+const BREATH_AMPLITUDE = 0.06;
 
 export default function InkPuddleLayer() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -142,8 +152,14 @@ export default function InkPuddleLayer() {
           : MORPH_IDLE_MS - (MORPH_IDLE_MS - MORPH_FAST_MS) * speedFactor;
       blob.style.animationDuration = `${morphMs}ms`;
       lens.style.animationDuration = `${morphMs}ms`;
-      blob.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) rotate(${angleDeg}deg) scale(${splashScale * stretch}, ${splashScale * squash})`;
-      lens.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) rotate(${angleDeg}deg) scale(${stretch}, ${squash})`;
+      // Idle breathing: 6s inhale/exhale scale pulse. Amplitude is
+      // multiplied by (1 - speedFactor) so it blends out smoothly as
+      // movement resumes instead of snapping off.
+      const breathPhase = (performance.now() % BREATH_MS) / BREATH_MS;
+      const breathRaw = 0.5 - 0.5 * Math.cos(2 * Math.PI * breathPhase);
+      const breathe = 1 + BREATH_AMPLITUDE * breathRaw * (1 - speedFactor);
+      blob.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) rotate(${angleDeg}deg) scale(${splashScale * stretch * breathe}, ${splashScale * squash * breathe})`;
+      lens.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) rotate(${angleDeg}deg) scale(${stretch * breathe}, ${squash * breathe})`;
       // Crossfade: ink blob out, negative lens in, while over the image.
       const wantLens = t.inside && t.overImage ? 1 : 0;
       lensFactor += (wantLens - lensFactor) * 0.15;
