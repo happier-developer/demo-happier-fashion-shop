@@ -108,7 +108,7 @@ function HeaderInner() {
               <Shirt className="h-5 w-5" aria-hidden />
             </span>
             <span className="font-display text-2xl font-semibold whitespace-nowrap text-ink">
-              Happier Shirt
+              Happier Fashion
             </span>
           </Link>
 
