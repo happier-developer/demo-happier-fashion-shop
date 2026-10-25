@@ -222,6 +222,31 @@ function ProductsDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const active = isActive(pathname, "/san-pham");
+  // Bấm link trong menu thì đóng panel ngay: header nằm ở layout nên
+  // không remount khi điều hướng mềm, state open cũ sẽ sống sót sang
+  // trang mới nếu không đóng ở đây — đó chính là lỗi "bấm xong menu
+  // vẫn hiện" (trước đây HeaderInner không truyền onNavigate cho
+  // dropdown nên các onClick trong panel đều là no-op).
+  const close = useCallback(() => {
+    setOpen(false);
+    onNavigate?.();
+  }, [onNavigate]);
+  // Đai an toàn: đổi route cũng đóng panel — cả đổi pathname lẫn
+  // back/forward chỉ đổi query (chuyển danh mục trên cùng /san-pham).
+  // Dùng pathname effect + popstate thay cho useSearchParams để không
+  // cần Suspense boundary quanh Header ở layout.
+  const prevPathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      setOpen(false);
+    }
+  }, [pathname]);
+  useEffect(() => {
+    const onPopState = () => setOpen(false);
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
   const handleBlur = (event: ReactFocusEvent<HTMLLIElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget as Node)) {
       setOpen(false);
@@ -240,7 +265,7 @@ function ProductsDropdown({
     >
       <Link
         href="/san-pham"
-        onClick={onNavigate}
+        onClick={close}
         aria-haspopup="true"
         aria-expanded={open}
         aria-current={active ? "page" : undefined}
@@ -257,7 +282,7 @@ function ProductsDropdown({
         />
       </Link>
       {open && (
-        <MegaMenuPanel categories={categories} onNavigate={onNavigate} />
+        <MegaMenuPanel categories={categories} onNavigate={close} />
       )}
     </li>
   );
@@ -386,6 +411,7 @@ function SearchOverlay({
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/san-pham"
+              onClick={onClose}
               className="rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-ink transition duration-state ease-standard hover:border-ink hover:bg-line/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
             >
               Tất cả sản phẩm
@@ -394,6 +420,7 @@ function SearchOverlay({
               <Link
                 key={category.slug}
                 href={categoryHref(category.slug)}
+                onClick={onClose}
                 className="rounded-full border border-line bg-white px-4 py-2 text-sm text-muted transition duration-state ease-standard hover:border-ink hover:bg-line/50 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
               >
                 {category.name}
@@ -635,6 +662,27 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
 
   const showBadge = hydrated && totalQuantity > 0;
   const closeSearch = useCallback(() => setSearchOpen(false), []);
+  // Đóng menu mobile: đóng cả menu lẫn accordion "Sản phẩm" để lần
+  // mở sau không còn thấy accordion cũ mở sẵn. Dùng chung cho mọi
+  // link trong menu mobile — bấm link nào cũng đóng ngay, không chờ
+  // đổi pathname (đổi query trên cùng /san-pham không đổi pathname
+  // nên pattern đóng-theo-pathname cũ không bắt được trường hợp này).
+  const closeMobileMenu = useCallback(() => {
+    setMobileOpen(false);
+    setMobileProductsOpen(false);
+  }, []);
+  // Đai an toàn: back/forward (kể cả chỉ đổi query) cũng đóng menu
+  // mobile và overlay tìm kiếm; desktop panel có listener riêng
+  // trong ProductsDropdown.
+  useEffect(() => {
+    const onPopState = () => {
+      setMobileOpen(false);
+      setMobileProductsOpen(false);
+      setSearchOpen(false);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   // Brand-click ink splash: burst at the click point + tell the hero
   // blob (homepage only) to splash. Skipped under reduced motion, and
@@ -902,7 +950,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                         <li>
                           <Link
                             href="/san-pham"
-                            onClick={() => setMobileOpen(false)}
+                            onClick={closeMobileMenu}
                             className="block rounded-[2px] px-3 py-2.5 text-[15px] font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
                           >
                             Tất cả sản phẩm
@@ -917,7 +965,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                               <li key={category.slug}>
                                 <Link
                                   href={categoryHref(category.slug)}
-                                  onClick={() => setMobileOpen(false)}
+                                  onClick={closeMobileMenu}
                                   className="block rounded-[2px] px-3 py-2.5 text-[15px] text-muted transition duration-state ease-standard active:bg-line/60 hover:bg-line/50 hover:text-ink"
                                 >
                                   {category.name}
@@ -935,7 +983,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                               <li key={category.slug}>
                                 <Link
                                   href={categoryHref(category.slug)}
-                                  onClick={() => setMobileOpen(false)}
+                                  onClick={closeMobileMenu}
                                   className="block rounded-[2px] px-3 py-2.5 text-[15px] text-muted transition duration-state ease-standard active:bg-line/60 hover:bg-line/50 hover:text-ink"
                                 >
                                   {category.name}
@@ -951,7 +999,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={closeMobileMenu}
                       aria-current={
                         isActive(pathname, item.href) ? "page" : undefined
                       }
@@ -969,7 +1017,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
               <li>
                 <Link
                   href="/yeu-thich"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={closeMobileMenu}
                   className="flex items-center gap-2 rounded-[2px] px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
                 >
                   <Heart className="h-5 w-5" aria-hidden />
@@ -980,7 +1028,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                 <li>
                   <Link
                     href="/admin"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={closeMobileMenu}
                     className="flex items-center gap-2 rounded-[2px] px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
                   >
                     Quản trị — Dashboard
@@ -990,7 +1038,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
               <li>
                 <Link
                   href={accountHref}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={closeMobileMenu}
                   className="flex items-center gap-2 rounded-[2px] px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
                 >
                   <User className="h-5 w-5" aria-hidden />
