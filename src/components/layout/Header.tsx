@@ -499,7 +499,8 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
 
   // Brand-click ink splash: burst at the click point + tell the hero
   // blob (homepage only) to splash. Skipped under reduced motion, and
-  // never prevents the link's normal navigation to "/".
+  // never prevents the link's normal navigation to "/" — except for the
+  // homepage scroll-to-top case below.
   const [bursts, setBursts] = useState<Burst[]>([]);
   const burstIdRef = useRef(0);
   const removeBurst = useCallback(
@@ -507,6 +508,27 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
     [],
   );
   const handleBrandClick = (e: ReactMouseEvent<HTMLAnchorElement>) => {
+    // Logo-click scroll-to-top: on the homepage a plain left-click on
+    // the wordmark scrolls the window back to the very top instead of
+    // navigating, because same-route navigation to "/" does not
+    // guarantee a scroll reset. Modified clicks (Ctrl/Cmd/middle/
+    // Shift/Alt) pass through untouched so open-in-new-tab still works,
+    // and on any other page the link navigates to "/" normally.
+    // The href="/" stays on the element, and the splash below still
+    // fires (except under reduced motion, as before).
+    const isPlainLeftClick =
+      e.button === 0 &&
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.shiftKey &&
+      !e.altKey;
+    if (isPlainLeftClick && pathname === "/") {
+      e.preventDefault();
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+    }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const rect = e.currentTarget.getBoundingClientRect();
     // Keyboard activation reports 0,0 — fall back to the wordmark center.
