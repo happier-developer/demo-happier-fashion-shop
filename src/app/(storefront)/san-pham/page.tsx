@@ -5,6 +5,7 @@ import { aboutContent } from "@/lib/config";
 import Container from "@/components/ui/Container";
 import ProductCard from "@/components/product/ProductCard";
 import FadeInOnChange from "@/components/ui/FadeInOnChange";
+import FilterDrawer from "@/components/listing/FilterDrawer";
 import type { Category } from "@/lib/db/schema";
 import {
   getCatalogData,
@@ -112,6 +113,11 @@ export default async function CatalogPage({
     "sap-xep": activeSort === "moi-nhat" ? undefined : activeSort,
     q: query || undefined,
   };
+  // Số lọc đang bật (hiển thị badge trên nút "Bộ lọc"): mỗi tham số
+  // khác mặc định tính 1 — danh mục, size, màu, giá, sắp xếp (chỉ khi
+  // khác "moi-nhat" vì đó là mặc định, đã chuẩn hóa về undefined ở
+  // base) và từ khóa tìm kiếm.
+  const activeCount = Object.values(base).filter(Boolean).length;
 
   const data = await loadCatalog();
 
@@ -180,7 +186,15 @@ export default async function CatalogPage({
         </p>
       </div>
 
-      <div className="mb-10 flex flex-col gap-4">
+      {/* Khối lọc nằm trong drawer "Bộ lọc": chỉ còn nút mở drawer
+          hiện ngoài trang; toàn bộ điều khiển bên dưới giữ nguyên
+          href/tham số/hành vi, bấm pill thì áp dụng ngay và drawer
+          vẫn mở để ghép nhiều lọc. Link "Xóa tìm kiếm" cũng chuyển
+          vào đây (ngay dưới ô tìm kiếm) để ngoài trang không còn
+          điều khiển xóa lọc mồ côi; dòng trạng thái kết quả vẫn ở
+          ngoài, ngay trên lưới. */}
+      <FilterDrawer activeCount={activeCount}>
+      <div className="flex flex-col gap-4">
         {/* Ô tìm kiếm trên trang danh sách: GET form giữ nguyên các
             bộ lọc đang bật qua hidden input, đồng bộ với ?q trên URL
             nhờ defaultValue (server render theo searchParams). */}
@@ -214,6 +228,14 @@ export default async function CatalogPage({
             Tìm
           </button>
         </form>
+        {query && (
+          <Link
+            href={buildHref(base, { q: undefined })}
+            className="text-sm font-medium text-cta underline-offset-4 hover:text-ink hover:underline"
+          >
+            Xóa tìm kiếm
+          </Link>
+        )}
         <nav aria-label="Lọc sản phẩm theo danh mục" className="flex flex-wrap gap-2">
           <Link href={buildHref(base, { "danh-muc": undefined })} className={pillClasses(!activeCategory)}>
             Tất cả
@@ -277,6 +299,7 @@ export default async function CatalogPage({
           </span>
         </div>
       </div>
+      </FilterDrawer>
 
       {query && (
         <div className="flex flex-wrap items-center gap-3">
@@ -285,12 +308,6 @@ export default async function CatalogPage({
             <span className="font-medium text-ink">“{query}”</span> —{" "}
             {visible.length} sản phẩm
           </p>
-          <Link
-            href={buildHref(base, { q: undefined })}
-            className="text-sm font-medium text-cta underline-offset-4 hover:text-ink hover:underline"
-          >
-            Xóa tìm kiếm
-          </Link>
         </div>
       )}
 
