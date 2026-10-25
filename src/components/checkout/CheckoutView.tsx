@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import Image from "next/image";
 import {
   Banknote,
   CheckCircle2,
   Loader2,
   QrCode,
+  RefreshCcw,
   ShoppingBag,
+  Truck,
 } from "lucide-react";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import Button from "@/components/ui/Button";
@@ -167,6 +169,82 @@ function CheckoutSuccess({ success }: { success: SuccessState }) {
   );
 }
 
+
+// Khối bước theo phong cách "Đặt hàng trong 3 bước": gạch ngang đậm trên
+// cùng, số bước serif mờ, tiêu đề serif, mô tả sans mờ. Chỉ là trình bày —
+// không chứa logic form hay đơn hàng.
+function StepSection({
+  number,
+  title,
+  description,
+  children,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  children?: ReactNode;
+}) {
+  return (
+    <section className="border-t-2 border-ink pt-6">
+      <p className="font-display text-lg text-muted" aria-hidden>
+        {number}
+      </p>
+      <h2 className="mt-2 font-display text-2xl leading-snug font-semibold text-ink sm:text-3xl">
+        {title}
+      </h2>
+      <p className="mt-2 text-muted">{description}</p>
+      {children ? <div className="mt-6">{children}</div> : null}
+    </section>
+  );
+}
+
+// Dải cam kết dưới form, kiểu ảnh tham chiếu thứ hai: icon + tiêu đề đậm +
+// dòng phụ mờ, căn giữa, 3 cột desktop. Mọi dòng chữ đều lấy từ nội dung
+// sẵn có của shop — không bịa chính sách, phí hay thời hạn.
+const perks: ReadonlyArray<{
+  icon: typeof Truck;
+  title: string;
+  text: string;
+}> = [
+  {
+    icon: Truck,
+    title: "Giao hàng miễn phí",
+    text: "Phí giao hàng miễn phí, shop giao tận nơi.",
+  },
+  {
+    icon: QrCode,
+    title: "Thanh toán linh hoạt",
+    text: "Chuyển khoản VietQR hoặc trả khi nhận (COD).",
+  },
+  {
+    icon: RefreshCcw,
+    title: "Đổi size miễn phí 7 ngày",
+    text: "Đổi size miễn phí trong 7 ngày nếu sản phẩm chưa qua sử dụng.",
+  },
+];
+
+function PerksStrip() {
+  return (
+    <section
+      aria-label="Cam kết của shop"
+      className="mt-16 border-t border-line pt-12"
+    >
+      <ul className="grid gap-10 sm:grid-cols-3">
+        {perks.map((perk) => {
+          const Icon = perk.icon;
+          return (
+            <li key={perk.title} className="text-center">
+              <Icon className="mx-auto h-8 w-8 text-ink" aria-hidden />
+              <h3 className="mt-4 font-bold text-ink">{perk.title}</h3>
+              <p className="mt-2 text-sm text-muted">{perk.text}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 export default function CheckoutView() {
   const { items, totalPriceVnd, hydrated, clear } = useCart();
 
@@ -267,135 +345,24 @@ export default function CheckoutView() {
 
   return (
     <Container className="py-10 sm:py-14">
-      <h1 className="text-2xl font-bold text-ink sm:text-3xl">
-        Thanh toán
-      </h1>
+      <div className="mx-auto max-w-3xl text-center">
+        <h1 className="font-display text-4xl leading-[1.1] font-semibold text-ink sm:text-5xl">
+          Thanh toán
+        </h1>
+        <p className="mt-3 text-muted">Đặt hàng trong 3 bước.</p>
+      </div>
 
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_380px]"
+        className="mx-auto mt-12 max-w-3xl space-y-12"
       >
-        <div className="space-y-8">
-          <section className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
-            <h2 className="text-lg font-bold text-ink">
-              Thông tin giao hàng
-            </h2>
-            <div className="mt-4 space-y-4">
-              <Field
-                label="Họ tên người nhận"
-                htmlFor="checkout-name"
-                error={fieldErrors.customerName}
-              >
-                <Input
-                  id="checkout-name"
-                  name="customerName"
-                  autoComplete="name"
-                  placeholder="Ví dụ: Nguyễn Văn A"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  error={Boolean(fieldErrors.customerName)}
-                />
-              </Field>
-              <Field
-                label="Số điện thoại"
-                htmlFor="checkout-phone"
-                error={fieldErrors.customerPhone}
-              >
-                <Input
-                  id="checkout-phone"
-                  name="customerPhone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="Ví dụ: 0901 234 567"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  error={Boolean(fieldErrors.customerPhone)}
-                />
-              </Field>
-              <Field
-                label="Địa chỉ giao hàng"
-                htmlFor="checkout-address"
-                error={fieldErrors.customerAddress}
-              >
-                <Input
-                  id="checkout-address"
-                  name="customerAddress"
-                  autoComplete="street-address"
-                  placeholder="Số nhà, đường, phường, quận"
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  error={Boolean(fieldErrors.customerAddress)}
-                />
-              </Field>
-              <Field
-                label="Ghi chú (không bắt buộc)"
-                htmlFor="checkout-note"
-                error={fieldErrors.note}
-              >
-                <Textarea
-                  id="checkout-note"
-                  name="note"
-                  rows={3}
-                  placeholder="Ví dụ: ít đường, giao giờ hành chính…"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  error={Boolean(fieldErrors.note)}
-                />
-              </Field>
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
-            <h2 className="text-lg font-bold text-ink">
-              Phương thức thanh toán
-            </h2>
-            {fieldErrors.paymentMethod ? (
-              <p className="mt-2 text-sm text-error" role="alert">
-                {fieldErrors.paymentMethod}
-              </p>
-            ) : null}
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {paymentOptions.map((option) => {
-                const Icon = option.icon;
-                const selected = paymentMethod === option.value;
-                return (
-                  <label
-                    key={option.value}
-                    className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${
-                      selected
-                        ? "border-cta bg-cta/5 ring-2 ring-cta/25"
-                        : "border-line bg-surface hover:border-accent"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={option.value}
-                      checked={selected}
-                      onChange={() => setPaymentMethod(option.value)}
-                      className="mt-1 h-4 w-4 shrink-0 accent-[#a85b2a]"
-                    />
-                    <span>
-                      <span className="flex items-center gap-2 font-medium text-ink">
-                        <Icon className="h-5 w-5 text-cta" aria-hidden />
-                        {option.title}
-                      </span>
-                      <span className="mt-1 block text-sm text-muted">
-                        {option.description}
-                      </span>
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </section>
-        </div>
-
-        <aside className="rounded-2xl border border-line bg-surface p-5 sm:p-6 lg:sticky lg:top-24">
-          <h2 className="text-lg font-bold text-ink">Tóm tắt đơn hàng</h2>
-          <ul className="mt-4 divide-y divide-line">
+        <StepSection
+          number="01"
+          title="Sản phẩm đã chọn"
+          description="Sản phẩm, size/màu và số lượng bạn đã chọn."
+        >
+          <ul className="divide-y divide-line">
             {items.map((item) => (
               <li
                 key={item.key}
@@ -436,32 +403,161 @@ export default function CheckoutView() {
             Giá và tình trạng còn hàng được server xác nhận lại tại thời điểm
             đặt hàng.
           </p>
+        </StepSection>
 
-          {formError ? (
-            <p
-              className="mt-4 rounded-xl bg-error/10 px-4 py-3 text-sm text-error"
-              role="alert"
+        <StepSection
+          number="02"
+          title="Đặt hàng & thanh toán"
+          description="Điền thông tin giao hàng, chọn chuyển khoản VietQR hoặc trả khi nhận (COD)."
+        >
+          <h3 className="font-semibold text-ink">Thông tin giao hàng</h3>
+          <div className="mt-4 space-y-4">
+            <Field
+              label="Họ tên người nhận"
+              htmlFor="checkout-name"
+              error={fieldErrors.customerName}
             >
-              {formError}
+              <Input
+                id="checkout-name"
+                name="customerName"
+                autoComplete="name"
+                placeholder="Ví dụ: Nguyễn Văn A"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                error={Boolean(fieldErrors.customerName)}
+              />
+            </Field>
+            <Field
+              label="Số điện thoại"
+              htmlFor="checkout-phone"
+              error={fieldErrors.customerPhone}
+            >
+              <Input
+                id="checkout-phone"
+                name="customerPhone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="Ví dụ: 0901 234 567"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                error={Boolean(fieldErrors.customerPhone)}
+              />
+            </Field>
+            <Field
+              label="Địa chỉ giao hàng"
+              htmlFor="checkout-address"
+              error={fieldErrors.customerAddress}
+            >
+              <Input
+                id="checkout-address"
+                name="customerAddress"
+                autoComplete="street-address"
+                placeholder="Số nhà, đường, phường, quận"
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                error={Boolean(fieldErrors.customerAddress)}
+              />
+            </Field>
+            <Field
+              label="Ghi chú (không bắt buộc)"
+              htmlFor="checkout-note"
+              error={fieldErrors.note}
+            >
+              <Textarea
+                id="checkout-note"
+                name="note"
+                rows={3}
+                placeholder="Ví dụ: ít đường, giao giờ hành chính…"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                error={Boolean(fieldErrors.note)}
+              />
+            </Field>
+          </div>
+
+          <h3 className="mt-8 font-semibold text-ink">
+            Phương thức thanh toán
+          </h3>
+          {fieldErrors.paymentMethod ? (
+            <p className="mt-2 text-sm text-error" role="alert">
+              {fieldErrors.paymentMethod}
             </p>
           ) : null}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {paymentOptions.map((option) => {
+              const Icon = option.icon;
+              const selected = paymentMethod === option.value;
+              return (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${
+                    selected
+                      ? "border-cta bg-cta/5 ring-2 ring-cta/25"
+                      : "border-line bg-surface hover:border-accent"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={option.value}
+                    checked={selected}
+                    onChange={() => setPaymentMethod(option.value)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-[#a85b2a]"
+                  />
+                  <span>
+                    <span className="flex items-center gap-2 font-medium text-ink">
+                      <Icon className="h-5 w-5 text-cta" aria-hidden />
+                      {option.title}
+                    </span>
+                    <span className="mt-1 block text-sm text-muted">
+                      {option.description}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </StepSection>
 
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="mt-5 w-full"
+        {formError ? (
+          <p
+            className="rounded-xl bg-error/10 px-4 py-3 text-sm text-error"
+            role="alert"
           >
-            {submitting ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-                Đang đặt hàng…
-              </>
-            ) : (
-              "Đặt hàng"
-            )}
-          </Button>
-        </aside>
+            {formError}
+          </p>
+        ) : null}
+
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="w-full"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+              Đang đặt hàng…
+            </>
+          ) : (
+            "Đặt hàng"
+          )}
+        </Button>
       </form>
+
+      <div className="mx-auto mt-16 max-w-3xl">
+        <StepSection
+          number="03"
+          title="Nhận hàng"
+          description="Shop xác nhận, đóng gói và giao đến tận nơi cho bạn."
+        >
+          <p className="text-muted">
+            Shop sẽ gọi điện xác nhận đơn trong ít phút sau khi bạn đặt hàng.
+          </p>
+        </StepSection>
+      </div>
+
+      <PerksStrip />
     </Container>
   );
 }
