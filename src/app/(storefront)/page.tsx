@@ -8,6 +8,9 @@ import {
   CreditCard,
   PackageCheck,
   ShoppingBag,
+  Truck,
+  QrCode,
+  RefreshCcw,
 } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
@@ -47,6 +50,30 @@ async function loadFeaturedProducts(): Promise<ProductWithVariants[]> {
     return [];
   }
 }
+
+// Dải cam kết dưới khối 3 bước — cùng 3 mục với trang Thanh toán (PR #41),
+// mọi dòng chữ đều lấy từ nội dung sẵn có của shop.
+const perks: ReadonlyArray<{
+  icon: typeof Truck;
+  title: string;
+  text: string;
+}> = [
+  {
+    icon: Truck,
+    title: "Giao hàng miễn phí",
+    text: "Phí giao hàng miễn phí, shop giao tận nơi.",
+  },
+  {
+    icon: QrCode,
+    title: "Thanh toán linh hoạt",
+    text: "Chuyển khoản VietQR hoặc trả khi nhận (COD).",
+  },
+  {
+    icon: RefreshCcw,
+    title: "Đổi size miễn phí 7 ngày",
+    text: "Đổi size miễn phí trong 7 ngày nếu sản phẩm chưa qua sử dụng.",
+  },
+];
 
 const orderSteps = [
   {
@@ -272,30 +299,49 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* ---------- Cách đặt hàng 3 bước ---------- */}
+      {/* ---------- Cách đặt hàng 3 bước (phong cách editorial, đồng bộ PR #41) ---------- */}
       <section>
-        <Container className="py-12 md:py-16">
-          <h2 className="font-display mb-10 text-center text-3xl font-semibold text-ink md:text-4xl">
+        <Container className="py-16 md:py-24">
+          <h2 className="font-display mb-12 text-center text-4xl font-semibold text-ink md:mb-14 md:text-5xl">
             Đặt hàng trong 3 bước
           </h2>
-          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+          <div className="grid gap-8 md:grid-cols-3 md:gap-10">
             {orderSteps.map((step, index) => (
               <div
                 key={step.title}
-                className="flex flex-col items-start gap-3 border-t-2 border-ink pt-6"
+                className="flex flex-col items-start gap-4 border-t-2 border-ink pt-8"
               >
-                <span className="font-display text-3xl font-semibold text-muted">
+                <span className="font-display text-4xl font-semibold text-muted md:text-5xl">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <h3 className="font-display text-xl font-semibold text-ink">
+                <h3 className="font-display text-2xl font-semibold text-ink">
                   {step.title}
                 </h3>
-                <p className="text-sm leading-relaxed text-muted">
+                <p className="text-base leading-relaxed text-muted">
                   {step.text}
                 </p>
               </div>
             ))}
           </div>
+
+          {/* ---------- Dải cam kết (cùng 3 mục với trang Thanh toán) ---------- */}
+          <section
+            aria-label="Cam kết của shop"
+            className="mt-16 border-t border-line pt-12"
+          >
+            <ul className="grid gap-10 sm:grid-cols-3">
+              {perks.map((perk) => {
+                const Icon = perk.icon;
+                return (
+                  <li key={perk.title} className="text-center">
+                    <Icon className="mx-auto h-8 w-8 text-ink" aria-hidden />
+                    <h3 className="mt-4 font-bold text-ink">{perk.title}</h3>
+                    <p className="mt-2 text-sm text-muted">{perk.text}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         </Container>
       </section>
     </>
