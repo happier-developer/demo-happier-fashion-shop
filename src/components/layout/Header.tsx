@@ -260,12 +260,12 @@ function HeaderInner() {
 
   return (
     <header id="top" className="bg-paper">
-      {/* Tầng 1 — dải tiện ích (chỉ desktop): tagline trái, tài khoản /
-          quản trị / giỏ hàng phải. */}
+      {/* Tầng 1 — dải tiện ích (chỉ desktop): tài khoản / quản trị /
+          giỏ hàng, căn phải. Tagline chỉ còn ở dưới wordmark để
+          không trùng lặp. */}
       <div className="hidden border-b border-line md:block">
         <Container>
-          <div className="flex items-center justify-between py-2 text-[13px] text-muted">
-            <p>{shopConfig.tagline}</p>
+          <div className="flex items-center justify-end py-2 text-[13px] text-muted">
             <div className="flex items-center gap-5">
               {isAdmin && (
                 <Link
