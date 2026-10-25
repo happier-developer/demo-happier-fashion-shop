@@ -18,6 +18,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouse
 import {
   LayoutDashboard,
   Menu as MenuIcon,
+  Search,
   ShoppingCart,
   User,
   X,
@@ -104,6 +105,62 @@ function CartButton({
         </span>
       )}
     </Link>
+  );
+}
+
+/** Ô tìm kiếm ở dải tiện ích (desktop): ban đầu chỉ hiện icon + nhãn,
+ *  bấm thì nở thành ô nhập; submit là GET form thường → điều hướng
+ *  tới /san-pham?q=… (không cần router JS). ESC đóng lại. Trang danh
+ *  sách tự đọc ?q và lọc, nên header không cần đọc searchParams. */
+function HeaderSearch() {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button
+        type="button"
+        aria-label="Tìm kiếm sản phẩm"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1.5 p-2 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+      >
+        <Search className="h-4 w-4" aria-hidden />
+        <span className="text-sm">Tìm kiếm</span>
+      </button>
+    );
+  }
+  return (
+    <form
+      action="/san-pham"
+      method="get"
+      role="search"
+      className="flex items-center gap-1"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
+      <input
+        type="search"
+        name="q"
+        autoFocus
+        placeholder="Tìm sản phẩm…"
+        aria-label="Tìm kiếm sản phẩm"
+        className="w-44 rounded-[2px] border border-line bg-paper px-2 py-1.5 text-sm text-ink outline-cta placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2"
+      />
+      <button
+        type="submit"
+        aria-label="Tìm kiếm"
+        className="rounded-[2px] p-2 text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+      >
+        <Search className="h-4 w-4" aria-hidden />
+      </button>
+      <button
+        type="button"
+        aria-label="Đóng tìm kiếm"
+        onClick={() => setOpen(false)}
+        className="rounded-[2px] p-2 text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+      >
+        <X className="h-4 w-4" aria-hidden />
+      </button>
+    </form>
   );
 }
 
@@ -270,6 +327,7 @@ function HeaderInner() {
           <Container>
             <div className="flex items-center justify-end py-2 text-[13px] text-muted">
               <div className="flex items-center gap-5">
+                <HeaderSearch />
                 {isAdmin && (
                   <Link
                     href="/admin"
@@ -409,6 +467,26 @@ function HeaderInner() {
           className="border-b border-line bg-paper md:hidden"
         >
           <Container>
+            <form
+              action="/san-pham"
+              method="get"
+              role="search"
+              className="flex gap-2 px-3 pt-3 pb-1"
+            >
+              <input
+                type="search"
+                name="q"
+                placeholder="Tìm sản phẩm…"
+                aria-label="Tìm kiếm sản phẩm"
+                className="min-w-0 flex-1 rounded-[2px] border border-line bg-paper px-3 py-2.5 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+              />
+              <button
+                type="submit"
+                className="rounded-[2px] bg-ink px-4 py-2.5 text-base font-medium text-paper transition duration-state ease-standard active:scale-95 hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+              >
+                Tìm
+              </button>
+            </form>
             <ul className="flex flex-col py-2">
               {isAdmin && (
                 <li>
