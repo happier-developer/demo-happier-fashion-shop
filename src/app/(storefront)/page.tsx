@@ -11,13 +11,12 @@ import {
 } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
-import ProductCard from "@/components/product/ProductCard";
 import SmokeFlowHeroBackground from "@/components/home/SmokeFlowHeroBackground";
 import CollectionSections from "@/components/home/CollectionSections";
 import HotDealCarousel from "@/components/home/HotDealCarousel";
 import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
-import type { Product } from "@/lib/db/schema";
+import type { ProductWithVariants } from "@/lib/products/catalog";
 import { getFeaturedProducts } from "@/lib/products/catalog";
 
 // Trang chủ (HAP-9) theo pattern DESIGN.md mục 6:
@@ -40,7 +39,7 @@ export const metadata: Metadata = {
   },
 };
 
-async function loadFeaturedProducts(): Promise<Product[]> {
+async function loadFeaturedProducts(): Promise<ProductWithVariants[]> {
   try {
     return await getFeaturedProducts();
   } catch (error) {
@@ -88,13 +87,7 @@ async function FeaturedProductsGrid() {
     );
   }
 
-  return (
-    <HotDealCarousel>
-      {featured.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </HotDealCarousel>
-  );
+  return <HotDealCarousel products={featured} />;
 }
 
 function FeaturedProductsSkeleton() {
@@ -231,30 +224,12 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* ---------- Happier Hot Deal (dữ liệu thật từ DB) ---------- */}
+      {/* ---------- Happier Hot Deal (dữ liệu thật từ DB) ----------
+          Tiêu đề + mũi tên + dãy sản phẩm rút gọn nằm trong
+          HotDealCarousel (client) để mũi tên ở tiêu đề điều khiển được
+          dãy trượt; khối này chỉ còn khung section + Suspense. */}
       <section className="py-4 md:py-8">
         <Container>
-          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="mb-2 text-xs font-medium tracking-[0.25em] text-muted uppercase">
-                Tuyển chọn
-              </p>
-              <h2 className="font-display text-3xl font-semibold text-ink md:text-4xl">
-                Happier Hot Deal
-              </h2>
-              <p className="mt-2 text-base text-muted">
-                Những sản phẩm được yêu thích nhất tại {shopConfig.name}.
-              </p>
-            </div>
-            <Link
-              href="/san-pham"
-              className="inline-flex items-center gap-1.5 font-medium text-cta transition hover:text-ink"
-            >
-              Xem tất cả sản phẩm
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </div>
-
           <Suspense fallback={<FeaturedProductsSkeleton />}>
             <FeaturedProductsGrid />
           </Suspense>
