@@ -116,6 +116,7 @@ export const mainNav = [
   { label: "Trang chủ", href: "/" },
   { label: "Sản phẩm", href: "/san-pham" },
   { label: "Giới thiệu", href: "/gioi-thieu" },
+  { label: "Blog", href: "/blog" },
   { label: "Liên hệ", href: "/lien-he" },
 ] as const;
 
