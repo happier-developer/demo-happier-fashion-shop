@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { ArrowRight } from "lucide-react";
 import Container from "@/components/ui/Container";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/product/ProductCard";
+import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import CollectionParallaxImage from "@/components/home/CollectionParallaxImage";
 import { getCatalogData } from "@/lib/products/catalog";
 
@@ -38,7 +40,38 @@ const COLLECTIONS = [
   },
 ] as const;
 
-export default async function CollectionSections() {
+type Collection = (typeof COLLECTIONS)[number];
+
+// Skeleton khớp đúng MỘT khối bộ sưu tập thật: hero full-screen
+// (min-h-svh) + khối lưới (tiêu đề mùa + mô tả + lưới 10 thẻ) — để
+// stream-in từng mùa không nhảy layout. Trường hợp danh mục rỗng
+// (khối thật chỉ là thông báo ngắn) vẫn lệch, chấp nhận vì dữ liệu
+// seed luôn có đủ 10 sản phẩm mỗi mùa.
+function CollectionSectionSkeleton() {
+  return (
+    <section aria-hidden>
+      <div className="relative min-h-svh overflow-hidden bg-line/40" />
+      <div className="scroll-mt-24">
+        <Container className="py-14 md:py-20">
+          <div className="mb-10">
+            <p className="mb-2 h-4 w-24 animate-pulse rounded bg-line/50" />
+            <h3 className="h-9 w-72 animate-pulse rounded bg-line/50 md:h-10" />
+            <p className="mt-2 h-6 w-96 max-w-full animate-pulse rounded bg-line/40" />
+          </div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
+          </div>
+        </Container>
+      </div>
+    </section>
+  );
+}
+
+// Một mùa: dữ liệu riêng (getCatalogData dùng cache `catalog` nên 4
+// lần gọi trong cùng request được dedupe, không thành 4 truy vấn DB).
+async function CollectionSection({ collection }: { collection: Collection }) {
   let catalog = null;
   try {
     catalog = await getCatalogData();
@@ -46,90 +79,98 @@ export default async function CollectionSections() {
     console.error("Không tải được catalogue cho bộ sưu tập mùa:", error);
   }
 
+  const category = catalog?.categoryList.find(
+    (item) => item.slug === collection.slug,
+  );
+  const products = category
+    ? catalog!.productList.filter(
+        (product) => product.categoryId === category.id,
+      )
+    : [];
+  const gridId = `bo-suu-tap-${collection.slug}-san-pham`;
+
+  return (
+    <section aria-label={`Bộ sưu tập ${collection.name}`}>
+      {/* Hero full-screen của bộ sưu tập — ảnh parallax, chữ đứng yên */}
+      <div className="relative min-h-svh overflow-hidden bg-line/40">
+        <CollectionParallaxImage
+          src={collection.hero}
+          alt={`Bộ sưu tập ${collection.name}`}
+        />
+        <div className="absolute inset-0 bg-ink/30" aria-hidden />
+        <div className="relative z-10 flex min-h-svh flex-col justify-end">
+          <Container className="flex flex-col items-start gap-5 pb-16 md:pb-20">
+            <p className="text-xs font-medium tracking-[0.25em] text-white/80 uppercase">
+              Bộ sưu tập
+            </p>
+            <h2 className="font-display text-5xl leading-[1.1] font-semibold text-white md:text-7xl">
+              {collection.name}
+            </h2>
+            <p className="max-w-xl text-base leading-relaxed text-white/90">
+              {collection.tagline}
+            </p>
+            <Button href={`#${gridId}`} variant="primary">
+              Xem {products.length > 0 ? products.length : 10} sản phẩm
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Button>
+          </Container>
+        </div>
+      </div>
+
+      {/* Lưới sản phẩm của bộ sưu tập — đủ 10, không phân trang */}
+      <div id={gridId} className="scroll-mt-24">
+        <Container className="py-14 md:py-20">
+        <div className="mb-10">
+          <p className="mb-2 text-xs font-medium tracking-[0.25em] text-muted uppercase">
+            Bộ sưu tập
+          </p>
+          <h3 className="font-display text-3xl font-semibold text-ink md:text-4xl">
+            Sản phẩm mùa {collection.name}
+          </h3>
+          {products.length > 0 && (
+            <p className="mt-2 text-base text-muted">
+              {products.length} sản phẩm — bấm vào sản phẩm để xem size,
+              màu và đặt hàng.
+            </p>
+          )}
+        </div>
+
+        {products.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-[2px] border border-dashed border-line bg-surface px-6 py-12 text-center">
+            <p className="font-medium text-ink">
+              Sản phẩm đang được cập nhật
+            </p>
+            <p className="max-w-md text-sm leading-relaxed text-muted">
+              Các sản phẩm mùa {collection.name} sẽ sớm xuất hiện tại
+              đây.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+        </Container>
+      </div>
+    </section>
+  );
+}
+
+// Vỏ đồng bộ: mỗi mùa stream độc lập sau Suspense riêng (fix glitch
+// khi load) thay vì một fallback chung 6 thẻ cho cả 4 mùa như trước.
+export default function CollectionSections() {
   return (
     <>
-      {COLLECTIONS.map((collection) => {
-        const category = catalog?.categoryList.find(
-          (item) => item.slug === collection.slug,
-        );
-        const products = category
-          ? catalog!.productList.filter(
-              (product) => product.categoryId === category.id,
-            )
-          : [];
-        const gridId = `bo-suu-tap-${collection.slug}-san-pham`;
-
-        return (
-          <section
-            key={collection.slug}
-            aria-label={`Bộ sưu tập ${collection.name}`}
-          >
-            {/* Hero full-screen của bộ sưu tập — ảnh parallax, chữ đứng yên */}
-            <div className="relative min-h-svh overflow-hidden bg-line/40">
-              <CollectionParallaxImage
-                src={collection.hero}
-                alt={`Bộ sưu tập ${collection.name}`}
-              />
-              <div className="absolute inset-0 bg-ink/30" aria-hidden />
-              <div className="relative z-10 flex min-h-svh flex-col justify-end">
-                <Container className="flex flex-col items-start gap-5 pb-16 md:pb-20">
-                  <p className="text-xs font-medium tracking-[0.25em] text-white/80 uppercase">
-                    Bộ sưu tập
-                  </p>
-                  <h2 className="font-display text-5xl leading-[1.1] font-semibold text-white md:text-7xl">
-                    {collection.name}
-                  </h2>
-                  <p className="max-w-xl text-base leading-relaxed text-white/90">
-                    {collection.tagline}
-                  </p>
-                  <Button href={`#${gridId}`} variant="primary">
-                    Xem {products.length > 0 ? products.length : 10} sản phẩm
-                    <ArrowRight className="h-4 w-4" aria-hidden />
-                  </Button>
-                </Container>
-              </div>
-            </div>
-
-            {/* Lưới sản phẩm của bộ sưu tập — đủ 10, không phân trang */}
-            <div id={gridId} className="scroll-mt-24">
-              <Container className="py-14 md:py-20">
-              <div className="mb-10">
-                <p className="mb-2 text-xs font-medium tracking-[0.25em] text-muted uppercase">
-                  Bộ sưu tập
-                </p>
-                <h3 className="font-display text-3xl font-semibold text-ink md:text-4xl">
-                  Sản phẩm mùa {collection.name}
-                </h3>
-                {products.length > 0 && (
-                  <p className="mt-2 text-base text-muted">
-                    {products.length} sản phẩm — bấm vào sản phẩm để xem size,
-                    màu và đặt hàng.
-                  </p>
-                )}
-              </div>
-
-              {products.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 rounded-[2px] border border-dashed border-line bg-surface px-6 py-12 text-center">
-                  <p className="font-medium text-ink">
-                    Sản phẩm đang được cập nhật
-                  </p>
-                  <p className="max-w-md text-sm leading-relaxed text-muted">
-                    Các sản phẩm mùa {collection.name} sẽ sớm xuất hiện tại
-                    đây.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              )}
-              </Container>
-            </div>
-          </section>
-        );
-      })}
+      {COLLECTIONS.map((collection) => (
+        <Suspense
+          key={collection.slug}
+          fallback={<CollectionSectionSkeleton />}
+        >
+          <CollectionSection collection={collection} />
+        </Suspense>
+      ))}
     </>
   );
 }

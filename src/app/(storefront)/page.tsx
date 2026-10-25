@@ -17,7 +17,6 @@ import Button from "@/components/ui/Button";
 import SmokeFlowHeroBackground from "@/components/home/SmokeFlowHeroBackground";
 import CollectionSections from "@/components/home/CollectionSections";
 import HotDealCarousel from "@/components/home/HotDealCarousel";
-import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import { shopConfig } from "@/lib/config";
 import type { ProductWithVariants } from "@/lib/products/catalog";
 import { getFeaturedProducts } from "@/lib/products/catalog";
@@ -117,15 +116,35 @@ async function FeaturedProductsGrid() {
   return <HotDealCarousel products={featured} />;
 }
 
+// Skeleton khớp đúng khối Hot Deal thật: hàng tiêu đề (2 nút h-10 w-10
+// + vạch tiêu đề) rồi dãy trượt 4/2/1 với thẻ rút gọn (ảnh 3:4 + tên
+// text-lg + giá) — để stream-in không nhảy layout.
 function FeaturedProductsSkeleton() {
   return (
-    <div
-      aria-hidden
-      className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3"
-    >
-      {Array.from({ length: 4 }).map((_, index) => (
-        <ProductCardSkeleton key={index} />
-      ))}
+    <div aria-hidden>
+      <div className="mb-10 flex items-center justify-center gap-2">
+        <div className="h-10 w-10 animate-pulse rounded bg-line/40" />
+        <div className="h-10 w-64 animate-pulse rounded bg-line/50" />
+        <div className="h-10 w-10 animate-pulse rounded bg-line/40" />
+      </div>
+      <div className="overflow-hidden">
+        <div className="-mx-3 flex">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="w-full shrink-0 px-3 sm:w-1/2 lg:w-1/4"
+            >
+              <div className="aspect-[3/4] animate-pulse bg-line/40" />
+              <div className="pt-4">
+                <div className="h-7 w-3/4 animate-pulse rounded bg-line/50" />
+              </div>
+              <div className="pt-1">
+                <div className="h-6 w-16 animate-pulse rounded bg-line/50" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -227,7 +246,9 @@ export default function HomePage() {
             <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
               Áo · Quần · Váy · Áo khoác
             </p>
-            <h1 className="font-display text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
+            {/* Khóa chiều cao 2 dòng (2 × leading 1.1) để font swap không
+                đổi chiều cao hero; không đổi cỡ chữ hay nội dung. */}
+            <h1 className="font-display min-h-[2.2em] text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
               Tối giản, tinh tế,
               <br />
               vượt thời gian
@@ -265,23 +286,10 @@ export default function HomePage() {
 
       {/* ---------- Bộ sưu tập theo mùa (Xuân → Hạ → Thu → Đông) ----------
           Mỗi bộ sưu tập: 1 hero full-screen + lưới 10 sản phẩm thật từ DB
-          (xem src/components/home/CollectionSections.tsx). */}
-      <Suspense
-        fallback={
-          <Container>
-            <div
-              aria-hidden
-              className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 lg:grid-cols-3"
-            >
-              {Array.from({ length: 6 }).map((_, index) => (
-                <ProductCardSkeleton key={index} />
-              ))}
-            </div>
-          </Container>
-        }
-      >
-        <CollectionSections />
-      </Suspense>
+          (xem src/components/home/CollectionSections.tsx). Mỗi mùa có
+          Suspense riêng bên trong CollectionSections với skeleton khớp
+          đúng khối của mùa đó, nên trang không cần fallback chung nữa. */}
+      <CollectionSections />
 
       {/* ---------- Giới thiệu ngắn (DESIGN.md v2: câu statement serif lớn) ---------- */}
       <section className="mt-16 border-y border-line bg-surface md:mt-20">

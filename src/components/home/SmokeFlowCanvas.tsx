@@ -59,6 +59,16 @@ export default function SmokeFlowCanvas() {
   );
   const [unavailable, setUnavailable] = useState(false);
 
+  // Mờ dần khi mount (fix glitch khi load): canvas xuất hiện qua
+  // opacity thay vì swap cứng từ gradient tĩnh; rAF để lần paint đầu
+  // ở opacity-0 rồi mới chuyển sang 100. motion-safe nên
+  // prefers-reduced-motion hiện ngay, không fade.
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const rafId = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
@@ -71,23 +81,29 @@ export default function SmokeFlowCanvas() {
   }
 
   return (
-    <Shader
-      className="h-full w-full"
-      disableTelemetry
-      onUnavailable={() => setUnavailable(true)}
+    <div
+      className={`h-full w-full motion-safe:transition-opacity motion-safe:duration-700 ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
     >
-      <SmokeFlow
-        colorA="#f2c9bb"
-        colorB="#dec6f2"
-        intensity={1}
-        emitRadius={0.07}
-        momentum={20}
-        dissipation={0.5}
-        detail={10}
-        gravity={2}
-        colorDecay={0.5}
-        colorSpace="OKLAB"
-      />
-    </Shader>
+      <Shader
+        className="h-full w-full"
+        disableTelemetry
+        onUnavailable={() => setUnavailable(true)}
+      >
+        <SmokeFlow
+          colorA="#f2c9bb"
+          colorB="#dec6f2"
+          intensity={1}
+          emitRadius={0.07}
+          momentum={20}
+          dissipation={0.5}
+          detail={10}
+          gravity={2}
+          colorDecay={0.5}
+          colorSpace="OKLAB"
+        />
+      </Shader>
+    </div>
   );
 }

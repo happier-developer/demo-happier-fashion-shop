@@ -26,7 +26,9 @@ export default function DetailProductImage({
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   return (
-    <div className="animate-fade-in relative aspect-[3/4] overflow-hidden bg-line/40">
+    // Không fade-in lúc load: ảnh hero hiện tĩnh, morph card→detail
+    // (viewTransitionName) giữ nguyên.
+    <div className="relative aspect-[3/4] overflow-hidden bg-line/40">
       {imageUrl ? (
         <>
           <button

@@ -107,7 +107,8 @@ export default function FavoritesView({
           <p className="mt-2 text-muted">
             Bạn có {favored.length} sản phẩm yêu thích.
           </p>
-          <div className="mt-6 grid animate-fade-in grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
+          {/* Không fade-in lúc load: lưới hiện tĩnh, bỏ tim chỉ gỡ thẻ. */}
+          <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3">
             {favored.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
