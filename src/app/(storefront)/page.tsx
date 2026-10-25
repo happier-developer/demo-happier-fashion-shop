@@ -246,11 +246,13 @@ export default function HomePage() {
             <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
               Áo · Quần · Váy · Áo khoác
             </p>
-            {/* Khóa chiều cao 2 dòng (2 × leading 1.1) để font swap không
-                đổi chiều cao hero; không đổi cỡ chữ hay nội dung. */}
-            <h1 className="font-display min-h-[2.2em] text-5xl leading-[1.1] font-semibold text-ink md:text-6xl">
+            {/* Khóa chiều cao tối thiểu 2 dòng (2 × leading 1.1) để font
+                swap không đổi chiều cao hero; mobile: cỡ 4xl + cân dòng
+                (text-balance) + ngắt dòng chỉ từ sm trở lên, để tiêu đề
+                không còn rớt chữ "tế," lẻ một dòng như ảnh chụp mobile. */}
+            <h1 className="font-display min-h-[2.2em] text-4xl leading-[1.1] font-semibold text-balance text-ink md:text-6xl">
               Tối giản, tinh tế,
-              <br />
+              <br className="hidden sm:inline" />
               vượt thời gian
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-muted">
@@ -310,7 +312,7 @@ export default function HomePage() {
       {/* ---------- Cách đặt hàng 3 bước (phong cách editorial, đồng bộ PR #41) ---------- */}
       <section>
         <Container className="py-16 md:py-24">
-          <h2 className="font-display mb-12 text-center text-4xl font-semibold text-ink md:mb-14 md:text-5xl">
+          <h2 className="font-display mb-12 text-center text-3xl font-semibold text-ink md:mb-14 md:text-5xl">
             Đặt hàng trong 3 bước
           </h2>
           <div className="grid gap-8 md:grid-cols-3 md:gap-10">
