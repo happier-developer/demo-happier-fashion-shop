@@ -90,9 +90,9 @@ function NavLink({
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`nav-sweep flex items-center px-5 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
+      className={`nav-sweep flex items-center whitespace-nowrap px-3.5 text-[13px] font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
         active
-          ? "font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
+          ? "font-semibold text-ink"
           : "text-muted hover:text-ink"
       }`}
     >
@@ -141,9 +141,9 @@ function ProductsDropdown({
         aria-haspopup="true"
         aria-expanded={open}
         aria-current={active ? "page" : undefined}
-        className={`nav-sweep flex items-center gap-1 px-5 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
+        className={`nav-sweep flex items-center gap-1 whitespace-nowrap px-3.5 text-[13px] font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
           active
-            ? "font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
+            ? "font-semibold text-ink"
             : "text-muted hover:text-ink"
         }`}
       >
@@ -428,8 +428,8 @@ function Wordmark({
       ? "text-2xl"
       : "text-3xl"
     : scrolled
-      ? "text-3xl xl:text-4xl"
-      : "text-5xl xl:text-6xl";
+      ? "text-2xl xl:text-3xl"
+      : "text-4xl xl:text-5xl";
   return (
     <span className="group relative inline-block">
       <Link
