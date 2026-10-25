@@ -8,6 +8,7 @@ import type { Category } from "@/lib/db/schema";
 import {
   getCatalogData,
   productPriceRange,
+  searchProductIds,
   type ProductWithVariants,
 } from "@/lib/products/catalog";
 
@@ -88,6 +89,7 @@ export default async function CatalogPage({
     mau?: string | string[];
     gia?: string | string[];
     "sap-xep"?: string | string[];
+    q?: string | string[];
   }>;
 }) {
   const params = await searchParams;
@@ -96,12 +98,18 @@ export default async function CatalogPage({
   const activeColor = single(params.mau);
   const activePrice = single(params.gia);
   const activeSort = single(params["sap-xep"]) ?? "moi-nhat";
+  // Từ khóa tìm kiếm (?q): chuẩn hóa khoảng trắng, tách từ, các từ
+  // AND với nhau; mỗi từ khớp tên HOẶC mô tả (không dấu, xem
+  // searchProductIds trong catalog.ts).
+  const query = single(params.q)?.trim() ?? "";
+  const searchTerms = query ? query.split(/\s+/).filter(Boolean) : [];
   const base = {
     "danh-muc": activeCategory,
     size: activeSize,
     mau: activeColor,
     gia: activePrice,
     "sap-xep": activeSort === "moi-nhat" ? undefined : activeSort,
+    q: query || undefined,
   };
 
   const data = await loadCatalog();
@@ -137,6 +145,20 @@ export default async function CatalogPage({
     return true;
   });
 
+  // Tìm kiếm kết hợp với mọi bộ lọc trên: lấy tập id khớp từ khóa
+  // (truy vấn trực tiếp, không qua cache catalogue) rồi giao với tập
+  // đã lọc — nên kết quả không bao giờ sai vì cache. Lỗi truy vấn thì
+  // hiện trạng thái trống thay vì lộ sản phẩm không khớp từ khóa.
+  if (searchTerms.length > 0) {
+    try {
+      const matchedIds = await searchProductIds(searchTerms);
+      visible = visible.filter((product) => matchedIds.has(product.id));
+    } catch (error) {
+      console.error("Không tìm được sản phẩm theo từ khóa:", error);
+      visible = [];
+    }
+  }
+
   visible = [...visible].sort((a, b) => {
     if (activeSort === "gia-tang")
       return productPriceRange(a).min - productPriceRange(b).min;
@@ -158,6 +180,39 @@ export default async function CatalogPage({
       </div>
 
       <div className="mb-10 flex flex-col gap-4">
+        {/* Ô tìm kiếm trên trang danh sách: GET form giữ nguyên các
+            bộ lọc đang bật qua hidden input, đồng bộ với ?q trên URL
+            nhờ defaultValue (server render theo searchParams). */}
+        <form
+          action="/san-pham"
+          method="get"
+          role="search"
+          className="flex max-w-md items-center gap-2"
+        >
+          {activeCategory && (
+            <input type="hidden" name="danh-muc" value={activeCategory} />
+          )}
+          {activeSize && <input type="hidden" name="size" value={activeSize} />}
+          {activeColor && <input type="hidden" name="mau" value={activeColor} />}
+          {activePrice && <input type="hidden" name="gia" value={activePrice} />}
+          {activeSort !== "moi-nhat" && (
+            <input type="hidden" name="sap-xep" value={activeSort} />
+          )}
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            placeholder="Tìm sản phẩm… (gõ không dấu cũng được)"
+            aria-label="Tìm kiếm sản phẩm"
+            className="min-w-0 flex-1 rounded-[2px] border border-line bg-paper px-3 py-2 text-sm text-ink outline-cta placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2"
+          />
+          <button
+            type="submit"
+            className="rounded-[2px] bg-ink px-4 py-2 text-sm font-medium text-paper transition duration-state ease-standard active:scale-95 hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+          >
+            Tìm
+          </button>
+        </form>
         <nav aria-label="Lọc sản phẩm theo danh mục" className="flex flex-wrap gap-2">
           <Link href={buildHref(base, { "danh-muc": undefined })} className={pillClasses(!activeCategory)}>
             Tất cả
@@ -222,10 +277,30 @@ export default async function CatalogPage({
         </div>
       </div>
 
+      {query && (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted" role="status">
+            Kết quả cho{" "}
+            <span className="font-medium text-ink">“{query}”</span> —{" "}
+            {visible.length} sản phẩm
+          </p>
+          <Link
+            href={buildHref(base, { q: undefined })}
+            className="text-sm font-medium text-cta underline-offset-4 hover:text-ink hover:underline"
+          >
+            Xóa tìm kiếm
+          </Link>
+        </div>
+      )}
+
       {visible.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-[2px] border border-dashed border-line bg-surface px-6 py-12 text-center">
           <Shirt className="h-10 w-10 text-ink" aria-hidden />
-          <p className="font-medium text-ink">Không có sản phẩm phù hợp bộ lọc</p>
+          <p className="font-medium text-ink">
+            {query
+              ? `Không tìm thấy sản phẩm cho “${query}”`
+              : "Không có sản phẩm phù hợp bộ lọc"}
+          </p>
           <p className="max-w-md text-sm leading-relaxed text-muted">
             Bạn xem thử{" "}
             <Link href="/san-pham" className="font-medium text-cta hover:text-ink">
@@ -239,7 +314,7 @@ export default async function CatalogPage({
         // chạy lại (micro-interaction v2.2), kèm press scale 0.95 đã có
         // sẵn ở pillClasses cho mọi tab lọc.
         <div
-          key={`${activeCategory ?? "all"}|${activeSize ?? "all"}|${activeColor ?? "all"}|${activePrice ?? "all"}|${activeSort}`}
+          key={`${activeCategory ?? "all"}|${activeSize ?? "all"}|${activeColor ?? "all"}|${activePrice ?? "all"}|${activeSort}|${query || "all"}`}
           className="grid animate-fade-in grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3"
         >
           {visible.map((product) => (
