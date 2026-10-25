@@ -93,6 +93,27 @@ export const productVariants = pgTable(
   ],
 );
 
+export const blogPosts = pgTable(
+  "blog_posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    slug: text("slug").notNull().unique(),
+    excerpt: text("excerpt").notNull(),
+    content: text("content").notNull(),
+    coverImageUrl: text("cover_image_url"),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    index("blog_posts_slug_idx").on(table.slug),
+    index("blog_posts_published_at_idx").on(table.publishedAt),
+  ],
+);
+
 export const orders = pgTable(
   "orders",
   {
@@ -171,3 +192,6 @@ export type NewOrderItem = typeof orderItems.$inferInsert;
 
 export type ProductVariant = typeof productVariants.$inferSelect;
 export type NewProductVariant = typeof productVariants.$inferInsert;
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type NewBlogPost = typeof blogPosts.$inferInsert;

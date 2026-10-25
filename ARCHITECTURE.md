@@ -43,13 +43,13 @@ Không làm ở v1: cổng thanh toán tự động VNPay/MoMo (cần hợp đ�
 ├─ .nvmrc                  # v24.22.1 — khớp engines.node và Vercel
 ├─ package.json            # version exact + packageManager npm@12.2.1; kèm package-lock.json
 ├─ .env.example            # chỉ tên biến, không secret thật
-├─ drizzle/                # migration SQL do Drizzle Kit sinh, commit vào repo (0000: 5 bảng fashion)
+├─ drizzle/                # migration SQL do Drizzle Kit sinh, commit vào repo (0000: 5 bảng fashion, 0001: bảng blog_posts)
 ├─ drizzle.config.ts
 ├─ public/                 # ảnh tĩnh (hiện chỉ dùng ảnh Unsplash từ xa)
 ├─ vercel.json             # regions: ["sin1"]
 └─ src/
    ├─ app/
-   │  ├─ (storefront)/     # trang chủ, san-pham, san-pham/[slug], gio-hang, thanh-toan, gioi-thieu, lien-he
+   │  ├─ (storefront)/     # trang chủ, san-pham, san-pham/[slug], gio-hang, thanh-toan, gioi-thieu, lien-he, blog, blog/[slug]
    │  ├─ auth/             # sign-in / sign-up (Neon Auth UI hoặc form gọi SDK)
    │  ├─ account/          # hồ sơ + lịch sử đơn — bắt buộc đăng nhập
    │  ├─ admin/            # layout có guard riêng; san-pham/ (kèm biến thể), don-hang/
@@ -59,6 +59,7 @@ Không làm ở v1: cổng thanh toán tự động VNPay/MoMo (cần hợp đ�
    ├─ components/          # ui/, layout/ (Header, Footer), product/ (Card, Purchase, Stepper, AddToCart), cart/, admin/
    ├─ lib/
    │  ├─ auth/             # server.ts (createNeonAuth), client.ts, admin.ts (kiểm tra ADMIN_EMAILS)
+   │  ├─ blog/             # posts.ts (đọc bài viết, cache tag blog, riêng với tag catalog)
    │  ├─ db/               # index.ts (kết nối Drizzle), schema.ts, seed.ts
    │  ├─ cart/             # store giỏ hàng phía client
    │  ├─ orders/           # tạo đơn, mã đơn HF-*, chuyển trạng thái, tính tiền theo biến thể
@@ -84,6 +85,11 @@ Index: `slug`, `category_id`, `is_featured`
 `id uuid PK`, `product_id uuid FK → products (on delete cascade)`, `size text` (S/M/L/XL/Free size), `color text`, `price_vnd integer` (giá thật dùng để tính đơn), `stock integer default 0`, `is_available boolean default true`, `sort_order integer`, `created_at`, `updated_at`
 Index: `product_id`, `(size, color)`
 Quy tắc: một sản phẩm thời trang chỉ bán được qua biến thể còn hàng (`is_available` và `stock > 0`); giá đơn lấy từ biến thể, không lấy từ `products.price_vnd` khi có biến thể.
+
+### blog_posts — BẢNG MỚI (thêm sau G4 theo lệnh của Duy, chỉ đọc công khai, không có CRUD admin)
+`id uuid PK`, `title text`, `slug text unique`, `excerpt text`, `content text` (các đoạn tách nhau bằng dòng trống, render thành khối `<p>`, không dùng thư viện markdown), `cover_image_url text null`, `published_at timestamptz`, `sort_order integer`, `created_at`, `updated_at`
+Index: `slug`, `published_at`
+Seed: 20 bài viết tiếng Việt thật (mẹo phối đồ, chất liệu, chăm sóc đồ, xu hướng), ảnh bìa Unsplash riêng từng bài, seed idempotent theo slug như sản phẩm; đọc qua `src/lib/blog/posts.ts` với cache tag `blog` riêng với tag `catalog`.
 
 ### orders
 `id uuid PK`, `code text unique` (mã đơn hiển thị, vd `HF-20261024-0001`), `user_id uuid null` (id user Neon Auth khi khách đăng nhập; **không đặt FK sang schema auth** — tham chiếu lỏng, khách vãng lai để null), `customer_name text`, `customer_phone text`, `customer_address text`, `note text null`, `subtotal_vnd integer`, `total_vnd integer` (v1: phí giao hàng = 0, `total = subtotal`), `payment_method text` (`vietqr` | `cod`), `payment_status text` (`unpaid` | `paid`), `status text` (`pending_confirmation` | `preparing` | `delivering` | `delivered` | `cancelled`), `created_at`, `updated_at`
