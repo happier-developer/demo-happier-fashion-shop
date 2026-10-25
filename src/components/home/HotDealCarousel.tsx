@@ -61,7 +61,7 @@ export default function HotDealCarousel({
           >
             <ChevronLeft className="h-6 w-6" aria-hidden />
           </button>
-          <h2 className="font-display text-3xl font-semibold text-ink md:text-4xl">
+          <h2 className="font-display text-2xl font-semibold text-ink md:text-4xl">
             Happier Hot Deal
           </h2>
           <button

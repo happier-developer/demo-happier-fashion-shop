@@ -450,10 +450,17 @@ function Wordmark({
   bursts: Burst[];
   onBurstDone: (id: number) => void;
 }) {
+  // Mobile: cỡ chữ co theo viewport (clamp) thay vì 3xl/2xl cố định.
+  // Đo từ ảnh chụp thật: wordmark ở 30px chiếm ~56% chiều rộng màn
+  // hình, nên hàng mobile 1fr/auto/1fr (hamburger 40px + 3 icon ~116px
+  // + padding khung 32px) đã tràn ngang dưới ~431px và không có
+  // overflow-x hidden nào chặn lại. Clamp này giữ hàng vừa từ 320px
+  // trở lên (chưa cuộn 20–30px, đã cuộn 18–24px) mà vẫn thu nhỏ khi
+  // cuộn ở mọi chiều rộng; desktop giữ nguyên.
   const sizeClasses = mobile
     ? scrolled
-      ? "text-2xl"
-      : "text-3xl"
+      ? "text-[clamp(1.125rem,5.5vw,1.5rem)]"
+      : "text-[clamp(1.25rem,6.4vw,1.875rem)]"
     : scrolled
       ? "text-2xl xl:text-3xl"
       : "text-4xl xl:text-5xl";
@@ -617,7 +624,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
         <div className="bg-[#cfe6f0] text-ink">
           <Container>
             <div className="relative flex items-center justify-center py-2.5 text-center">
-              <p className="px-10 text-[13px] md:text-sm">
+              <p className="px-8 text-[13px] md:px-10 md:text-sm">
                 Mới về | Bộ sưu tập Thu |{" "}
                 <Link
                   href={thuHref}
