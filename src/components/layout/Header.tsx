@@ -1,10 +1,12 @@
 "use client";
 
 // Header storefront dạng MASTHEAD tạp chí (khác hẳn cấu trúc thanh đơn
-// một hàng của Happier Coffee): 3 tầng riêng biệt — dải tiện ích, dòng
-// masthead với wordmark serif căn giữa, và hàng điều hướng dính (sticky)
-// với vạch hairline ngăn cách các mục. Masthead cuộn đi, chỉ hàng nav
-// dính lại trên cùng.
+// một hàng của Happier Coffee): dải tiện ích + dòng masthead với wordmark
+// serif căn giữa nằm trong <header>, còn hàng điều hướng là SIBLING của
+// <header> (không nằm trong nó). Lý do: sticky chỉ dính trong hộp của
+// phần tử cha — nếu nav nằm trong <header> ngắn thì nó không có chỗ để
+// dính và sẽ trôi đi cùng masthead khi cuộn (lỗi đã gặp trên prod).
+// Với cha là div layout cao cả trang, nav mới dính thật sự.
 // Trạng thái active của điều hướng theo pathname hiện tại; trên mobile
 // dùng nút menu mở/đóng được (có aria-expanded, đóng khi chọn mục hoặc
 // đổi trang). Badge giỏ, nhãn tài khoản và link Quản trị (chỉ admin)
@@ -16,7 +18,6 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouse
 import {
   LayoutDashboard,
   Menu as MenuIcon,
-  Search,
   ShoppingCart,
   User,
   X,
@@ -103,62 +104,6 @@ function CartButton({
         </span>
       )}
     </Link>
-  );
-}
-
-/** Ô tìm kiếm ở dải tiện ích (desktop): ban đầu chỉ hiện icon + nhãn,
- *  bấm thì nở thành ô nhập; submit là GET form thường → điều hướng
- *  tới /san-pham?q=… (không cần router JS). ESC đóng lại. Trang danh
- *  sách tự đọc ?q và lọc, nên header không cần đọc searchParams. */
-function HeaderSearch() {
-  const [open, setOpen] = useState(false);
-  if (!open) {
-    return (
-      <button
-        type="button"
-        aria-label="Tìm kiếm sản phẩm"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 p-2 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-      >
-        <Search className="h-4 w-4" aria-hidden />
-        <span className="text-sm">Tìm kiếm</span>
-      </button>
-    );
-  }
-  return (
-    <form
-      action="/san-pham"
-      method="get"
-      role="search"
-      className="flex items-center gap-1"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") setOpen(false);
-      }}
-    >
-      <input
-        type="search"
-        name="q"
-        autoFocus
-        placeholder="Tìm sản phẩm…"
-        aria-label="Tìm kiếm sản phẩm"
-        className="w-44 rounded-[2px] border border-line bg-paper px-2 py-1.5 text-sm text-ink outline-cta placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2"
-      />
-      <button
-        type="submit"
-        aria-label="Tìm kiếm"
-        className="rounded-[2px] p-2 text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-      >
-        <Search className="h-4 w-4" aria-hidden />
-      </button>
-      <button
-        type="button"
-        aria-label="Đóng tìm kiếm"
-        onClick={() => setOpen(false)}
-        className="rounded-[2px] p-2 text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-      >
-        <X className="h-4 w-4" aria-hidden />
-      </button>
-    </form>
   );
 }
 
@@ -316,113 +261,119 @@ function HeaderInner() {
   };
 
   return (
-    <header id="top" className="bg-paper">
-      {/* Tầng 1 — dải tiện ích (chỉ desktop): tài khoản / quản trị /
-          giỏ hàng, căn phải. Tagline chỉ còn ở dưới wordmark để
-          không trùng lặp. */}
-      <div className="hidden border-b border-line md:block">
-        <Container>
-          <div className="flex items-center justify-end py-2 text-[13px] text-muted">
-            <div className="flex items-center gap-5">
-              <HeaderSearch />
-              {isAdmin && (
+    <>
+      <header id="top" className="bg-paper">
+        {/* Tầng 1 — dải tiện ích (chỉ desktop): tài khoản / quản trị /
+            giỏ hàng, căn phải. Tagline chỉ còn ở dưới wordmark để
+            không trùng lặp. */}
+        <div className="hidden border-b border-line md:block">
+          <Container>
+            <div className="flex items-center justify-end py-2 text-[13px] text-muted">
+              <div className="flex items-center gap-5">
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    aria-label="Quản trị — mở Dashboard admin"
+                    className="inline-flex items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+                  >
+                    <LayoutDashboard className="h-4 w-4" aria-hidden />
+                    Quản trị
+                  </Link>
+                )}
                 <Link
-                  href="/admin"
-                  aria-label="Quản trị — mở Dashboard admin"
-                  className="inline-flex items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+                  href={accountHref}
+                  title={sessionUser ? sessionUser.email : undefined}
+                  aria-label={
+                    sessionUser
+                      ? `Tài khoản của ${sessionUser.name || sessionUser.email}`
+                      : "Tài khoản — đăng nhập"
+                  }
+                  className="inline-flex max-w-56 items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
                 >
-                  <LayoutDashboard className="h-4 w-4" aria-hidden />
-                  Quản trị
+                  <User className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="truncate">{accountLabel}</span>
                 </Link>
-              )}
-              <Link
-                href={accountHref}
-                title={sessionUser ? sessionUser.email : undefined}
-                aria-label={
-                  sessionUser
-                    ? `Tài khoản của ${sessionUser.name || sessionUser.email}`
-                    : "Tài khoản — đăng nhập"
-                }
-                className="inline-flex max-w-56 items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-              >
-                <User className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="truncate">{accountLabel}</span>
-              </Link>
-              <CartButton
-                showLabel
-                totalQuantity={totalQuantity}
-                showBadge={showBadge}
-              />
-            </div>
-          </div>
-        </Container>
-      </div>
-
-      {/* Tầng 2 — masthead: wordmark serif căn giữa, viền đôi kiểu tạp
-          chí ở dưới. Mobile: nút menu trái, giỏ hàng phải, wordmark giữa. */}
-      <div className="border-b-[3px] border-double border-line">
-        <Container>
-          <div className="relative flex flex-col items-center py-6 md:py-8">
-            <button
-              type="button"
-              className="absolute top-1/2 left-0 -translate-y-1/2 rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta md:hidden"
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-nav"
-              aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
-              onClick={() => setMobileOpen((open) => !open)}
-            >
-              {mobileOpen ? (
-                <X className="h-6 w-6" aria-hidden />
-              ) : (
-                <MenuIcon className="h-6 w-6" aria-hidden />
-              )}
-            </button>
-            <span className="group relative inline-block">
-              <Link
-                href="/"
-                onClick={handleBrandClick}
-                aria-label={`${shopConfig.name} — Trang chủ`}
-                className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide md:text-6xl"
-              >
-                {/* Wordmark wrapper owns the underline: previously the
-                    sweep was positioned against the inline <a>, whose
-                    box follows the font content box (Playfair overflows
-                    its 60px line box), so the line landed on the tagline
-                    below. This inline-block wrapper's box is exactly the
-                    wordmark line box, so the line now sits under the
-                    glyphs only — clear of the tagline. */}
-                <span className="relative inline-block leading-none">
-                  Happier Fashion
-                  <span
-                    aria-hidden
-                    className="absolute -bottom-2.5 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
-                  />
-                </span>
-              </Link>
-              {bursts.map((burst) => (
-                <BrandSplash
-                  key={burst.id}
-                  burst={burst}
-                  onDone={removeBurst}
+                <CartButton
+                  showLabel
+                  totalQuantity={totalQuantity}
+                  showBadge={showBadge}
                 />
-              ))}
-            </span>
-            <p className="mt-3 text-center text-xs font-medium tracking-[0.25em] text-muted uppercase">
-              {shopConfig.tagline}
-            </p>
-            <div className="absolute top-1/2 right-0 -translate-y-1/2 md:hidden">
-              <CartButton
-                showLabel={false}
-                totalQuantity={totalQuantity}
-                showBadge={showBadge}
-              />
+              </div>
             </div>
-          </div>
-        </Container>
-      </div>
+          </Container>
+        </div>
+
+        {/* Tầng 2 — masthead: wordmark serif căn giữa, viền đôi kiểu tạp
+            chí ở dưới. Mobile: nút menu trái, giỏ hàng phải, wordmark giữa.
+            Dải này dính trên mobile (sticky top-0, md:static để desktop
+            không đổi) để điều hướng luôn với tới được khi cuộn. */}
+        <div className="sticky top-0 z-50 border-b-[3px] border-double border-line bg-paper md:static">
+          <Container>
+            <div className="relative flex flex-col items-center py-6 md:py-8">
+              <button
+                type="button"
+                className="absolute top-1/2 left-0 -translate-y-1/2 rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta md:hidden"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+                aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
+                onClick={() => setMobileOpen((open) => !open)}
+              >
+                {mobileOpen ? (
+                  <X className="h-6 w-6" aria-hidden />
+                ) : (
+                  <MenuIcon className="h-6 w-6" aria-hidden />
+                )}
+              </button>
+              <span className="group relative inline-block">
+                <Link
+                  href="/"
+                  onClick={handleBrandClick}
+                  aria-label={`${shopConfig.name} — Trang chủ`}
+                  className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide md:text-6xl"
+                >
+                  {/* Wordmark wrapper owns the underline: previously the
+                      sweep was positioned against the inline <a>, whose
+                      box follows the font content box (Playfair overflows
+                      its 60px line box), so the line landed on the tagline
+                      below. This inline-block wrapper's box is exactly the
+                      wordmark line box, so the line now sits under the
+                      glyphs only — clear of the tagline. */}
+                  <span className="relative inline-block leading-none">
+                    Happier Fashion
+                    <span
+                      aria-hidden
+                      className="absolute -bottom-2.5 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
+                    />
+                  </span>
+                </Link>
+                {bursts.map((burst) => (
+                  <BrandSplash
+                    key={burst.id}
+                    burst={burst}
+                    onDone={removeBurst}
+                  />
+                ))}
+              </span>
+              <p className="mt-3 text-center text-xs font-medium tracking-[0.25em] text-muted uppercase">
+                {shopConfig.tagline}
+              </p>
+              <div className="absolute top-1/2 right-0 -translate-y-1/2 md:hidden">
+                <CartButton
+                  showLabel={false}
+                  totalQuantity={totalQuantity}
+                  showBadge={showBadge}
+                />
+              </div>
+            </div>
+          </Container>
+        </div>
+
+      </header>
 
       {/* Tầng 3 — hàng điều hướng dính (chỉ desktop): các mục căn giữa,
-          ngăn cách nhau bằng vạch hairline dọc. */}
+          ngăn cách nhau bằng vạch hairline dọc. Nav là sibling của
+          <header> nên cha của nó là div layout cao cả trang — sticky
+          top-0 mới dính thật khi cuộn. */}
       <div
         className={`sticky top-0 z-50 hidden border-b border-line motion-safe:transition-[background-color,box-shadow,backdrop-filter] motion-safe:duration-300 motion-safe:ease-standard md:block ${
           navScrolled
@@ -458,26 +409,6 @@ function HeaderInner() {
           className="border-b border-line bg-paper md:hidden"
         >
           <Container>
-            <form
-              action="/san-pham"
-              method="get"
-              role="search"
-              className="flex gap-2 px-3 pt-3 pb-1"
-            >
-              <input
-                type="search"
-                name="q"
-                placeholder="Tìm sản phẩm…"
-                aria-label="Tìm kiếm sản phẩm"
-                className="min-w-0 flex-1 rounded-[2px] border border-line bg-paper px-3 py-2.5 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-              />
-              <button
-                type="submit"
-                className="rounded-[2px] bg-ink px-4 py-2.5 text-base font-medium text-paper transition duration-state ease-standard active:scale-95 hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-              >
-                Tìm
-              </button>
-            </form>
             <ul className="flex flex-col py-2">
               {isAdmin && (
                 <li>
@@ -523,7 +454,7 @@ function HeaderInner() {
           </Container>
         </nav>
       )}
-    </header>
+    </>
   );
 }
 
