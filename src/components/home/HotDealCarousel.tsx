@@ -11,10 +11,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // Không tự chạy (no autoplay): chỉ đổi trang bằng nút mũi tên / chấm.
 // prefers-reduced-motion: motion-safe nên không có transition trượt,
 // đổi trang tức thì.
-// Nút mũi tên nằm ở hai bên hông slider, căn giữa dọc theo track
-// (absolute top-1/2 trong wrapper relative ôm riêng viewport + 2 nút,
-// là sibling của viewport overflow-hidden nên không bị cắt);
-// chấm chuyển trang vẫn ở dưới-trái như trước.
+// Nút mũi tên: nền đen (ink #111111) + icon trắng; từ màn xl trở lên
+// đặt NGOÀI track (xl:-left-14 / xl:-right-14 — cách mép track 16px,
+// vừa trong khoảng gutter: Container max-w 1200px + padding 24px nên
+// ở viewport 1280 nút vẫn cách mép màn hình 8px, không tràn ngang);
+// dưới xl giữ vị trí cũ ôm mép trong track (left-0/right-0) để màn hẹp
+// không bị tràn viewport. Nút vẫn là sibling của viewport overflow-hidden
+// nên không bị cắt; chấm chuyển trang vẫn ở dưới-trái như trước.
 export default function HotDealCarousel({
   children,
 }: {
@@ -70,7 +73,7 @@ export default function HotDealCarousel({
           onClick={() => setPage((p) => Math.max(0, p - 1))}
           disabled={currentPage === 0}
           aria-label="Trang trước"
-          className="absolute top-1/2 left-0 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[2px] border border-line bg-white text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="absolute top-1/2 left-0 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[2px] border border-ink bg-ink text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink focus-visible:outline-none xl:-left-14"
         >
           <ChevronLeft className="h-5 w-5" aria-hidden />
         </button>
@@ -79,7 +82,7 @@ export default function HotDealCarousel({
           onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
           disabled={currentPage === pageCount - 1}
           aria-label="Trang sau"
-          className="absolute top-1/2 right-0 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[2px] border border-line bg-white text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="absolute top-1/2 right-0 z-10 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[2px] border border-ink bg-ink text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink focus-visible:outline-none xl:-right-14"
         >
           <ChevronRight className="h-5 w-5" aria-hidden />
         </button>
