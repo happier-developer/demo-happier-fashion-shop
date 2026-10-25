@@ -9,7 +9,9 @@ import { useEffect, useState } from "react";
  *
  * The `shaders` canvas loads client-only (ssr:false): its WebGPU engine
  * never initializes during SSR. While it loads, and if it ever fails to
- * mount, a static gradient fills the same layer.
+ * mount, a static white background fills the same layer (the smoke
+ * canvas itself is transparent where there is no smoke, so the white
+ * layer behind it is the hero background in every state).
  *
  * The canvas layer is pointer-events-none, which is safe here even
  * though SmokeFlow is cursor-driven: the library registers its pointer
@@ -30,25 +32,19 @@ const SmokeFlowCanvas = dynamic(() => import("./SmokeFlowCanvas"), {
 });
 
 function StaticFallback() {
-  return (
-    <div
-      aria-hidden
-      className="h-full w-full"
-      style={{
-        background:
-          "linear-gradient(115deg, #fdf3ef 0%, #f6e3dc 30%, #ece0f4 58%, #f4f1f6 80%, #ffffff 100%)",
-      }}
-    />
-  );
+  // Nền hero trắng: canvas khói trong suốt ở chỗ không có khói nên
+  // lớp trắng phía sau canvas chính là nền hero (trước khi shader
+  // mount, khi shader lỗi, và với reduced-motion).
+  return <div aria-hidden className="h-full w-full bg-white" />;
 }
 
 export default function SmokeFlowHeroBackground() {
   // Mount trì hoãn tới sau first paint (rAF + idle callback, timeout
   // 1000ms) để chunk `shaders` không tranh hydration/LCP (fix glitch
-  // khi load); trước đó chỉ có gradient tĩnh lấp đầy đúng khung hero.
+  // khi load); trước đó chỉ có nền trắng tĩnh lấp đầy đúng khung hero.
   // Khi mount, khói mờ dần qua opacity trong SmokeFlowCanvas (không
-  // swap cứng từ gradient sang khói). prefers-reduced-motion: canvas
-  // tự trả về gradient tĩnh như cũ, không đổi hành vi.
+  // swap cứng từ nền trắng sang khói). prefers-reduced-motion: canvas
+  // tự trả về nền trắng tĩnh như cũ, không đổi hành vi.
   const [ready, setReady] = useState(false);
   useEffect(() => {
     let rafId = 0;

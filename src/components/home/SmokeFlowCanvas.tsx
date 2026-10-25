@@ -29,7 +29,7 @@ import { Shader, SmokeFlow } from "shaders/react";
  * pointer-events-none: the listeners live on window, not on the
  * canvas element, so nothing blocks clicks on the hero content.
  *
- * Guards: prefers-reduced-motion renders the static gradient fallback
+ * Guards: prefers-reduced-motion renders the static white fallback
  * instead of live smoke; if the browser/GPU cannot run the shader,
  * `onUnavailable` fires and this component swaps the canvas for the
  * same static fallback; the library itself pauses rendering when its
@@ -37,16 +37,9 @@ import { Shader, SmokeFlow } from "shaders/react";
  */
 
 function StaticFallback() {
-  return (
-    <div
-      aria-hidden
-      className="h-full w-full"
-      style={{
-        background:
-          "linear-gradient(115deg, #fdf3ef 0%, #f6e3dc 30%, #ece0f4 58%, #f4f1f6 80%, #ffffff 100%)",
-      }}
-    />
-  );
+  // Nền hero trắng (reduced-motion / WebGL không chạy được): cùng
+  // lớp trắng với fallback ở SmokeFlowHeroBackground.
+  return <div aria-hidden className="h-full w-full bg-white" />;
 }
 
 export default function SmokeFlowCanvas() {
@@ -60,7 +53,7 @@ export default function SmokeFlowCanvas() {
   const [unavailable, setUnavailable] = useState(false);
 
   // Mờ dần khi mount (fix glitch khi load): canvas xuất hiện qua
-  // opacity thay vì swap cứng từ gradient tĩnh; rAF để lần paint đầu
+  // opacity thay vì swap cứng từ nền trắng tĩnh; rAF để lần paint đầu
   // ở opacity-0 rồi mới chuyển sang 100. motion-safe nên
   // prefers-reduced-motion hiện ngay, không fade.
   const [visible, setVisible] = useState(false);

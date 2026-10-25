@@ -231,15 +231,20 @@ export default function HomePage() {
           nên hero KHÔNG lặp lại tên shop, tagline hay địa chỉ nữa.
           Hero là điểm bắt đầu mua sắm: headline editorial + mô tả +
           2 CTA giữ nguyên + ảnh sản phẩm nổi bật 3:4.
-          Nền hero là SmokeFlow của thư viện `shaders` (WebGPU, client-only
-          qua dynamic ssr:false): khói cursor-driven — khói tỏa ra, cuộn
-          và tan dần theo chuyển động chuột (kéo cảm ứng cũng tỏa khói),
-          màu pastel đào → lavender để tiêu đề serif đen vẫn đọc rõ.
+          Nền hero là màu trắng; trên nền trắng là SmokeFlow của thư viện
+          `shaders` (WebGPU, client-only qua dynamic ssr:false): khói
+          cursor-driven — khói tỏa ra, cuộn và tan dần theo chuyển động
+          chuột (kéo cảm ứng cũng tỏa khói), màu pastel đào → lavender
+          để tiêu đề serif đen vẫn đọc rõ. Canvas khói trong suốt ở chỗ
+          không có khói (fragment alpha = alpha màu × mật độ khói, canvas
+          alphaMode premultiplied) nên nền trắng phía sau canvas hiện
+          ra, khói pastel vẫn thấy rõ trên nền trắng mà không cần đổi
+          màu khói hay prop nào của SmokeFlow.
           LiquidMetal (chrome lỏng tự chảy, không nhận chuột) và shader
           WebGL tự viết (ShaderHeroBackground: gradient chảy + ripple)
           đã được gỡ khỏi hero nhưng file vẫn giữ nguyên trên disk để
           khôi phục khi cần. */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-white">
         <SmokeFlowHeroBackground />
         <Container className="relative z-10 grid items-center gap-10 py-14 md:grid-cols-2 md:py-20">
           <div className="flex flex-col items-start gap-6">
