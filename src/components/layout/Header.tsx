@@ -434,12 +434,17 @@ function BrandSplash({
  *  splash giọt mực khi bấm như bản cũ. */
 function Wordmark({
   scrolled,
+  morphReady,
   mobile,
   onBrandClick,
   bursts,
   onBurstDone,
 }: {
   scrolled: boolean;
+  // Cổng transition cho morph (xem HeaderInner): false cho tới khi
+  // lần đồng bộ scroll đầu tiên đã paint xong, để reload giữa trang
+  // không thấy logo co giãn từ cỡ lớn về cỡ nhỏ.
+  morphReady: boolean;
   mobile: boolean;
   onBrandClick: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
   bursts: Burst[];
@@ -452,13 +457,20 @@ function Wordmark({
     : scrolled
       ? "text-2xl xl:text-3xl"
       : "text-4xl xl:text-5xl";
+  // Transition của morph chỉ bật sau khi lần đồng bộ scroll đầu đã
+  // paint xong (morphReady); trước đó cỡ chữ đổi tức thì, không co
+  // giãn. Hover sweep (tracking-wide + gạch quét) vẫn có transition
+  // riêng của nó, không thuộc morph nên giữ nguyên.
+  const morphTransition = morphReady
+    ? "motion-safe:transition-[font-size,letter-spacing] motion-safe:duration-300 motion-safe:ease-standard"
+    : "";
   return (
     <span className="group relative inline-block">
       <Link
         href="/"
         onClick={onBrandClick}
         aria-label={`${shopConfig.name} — Trang chủ`}
-        className={`font-display text-center leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[font-size,letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide ${sizeClasses}`}
+        className={`font-display text-center leading-none font-semibold tracking-tight whitespace-nowrap text-ink ${morphTransition} [@media(hover:hover)]:group-hover:tracking-wide ${sizeClasses}`}
       >
         {/* Wrapper inline-block sở hữu gạch quét: box của nó đúng bằng
             box dòng wordmark nên gạch nằm dưới glyph, không lệch. */}
@@ -498,6 +510,24 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Cổng transition cho morph: layout effect ở trên đồng bộ scrolled
+  // từ scrollY thật TRƯỚC paint, nhưng nếu class transition đã có sẵn
+  // thì chính lần đồng bộ đầu đó vẫn chạy qua transition — reload
+  // giữa trang sẽ thấy logo co giãn từ cỡ lớn về cỡ nhỏ trong 300ms
+  // (đó là phần glitch PR #48 chưa chặn được: layout effect chỉ chặn
+  // nháy sau hydration, không chặn animation của lần sửa SSR→thật).
+  // morphReady chỉ bật ở passive effect (SAU paint đầu tiên), nên lần
+  // đồng bộ đầu áp dụng tức thì, không animation; mọi lần cuộn thật
+  // sau đó vẫn morph mượt đúng 300ms như cũ. Đặt cờ trong callback
+  // requestAnimationFrame (không setState trực tiếp trong thân effect)
+  // để không vi phạm react-hooks/set-state-in-effect; rAF chạy trước
+  // paint kế tiếp nên lần paint có transition đầu tiên đã đúng cỡ.
+  const [morphReady, setMorphReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMorphReady(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
   // Phiên đăng nhập + quyền admin lấy từ SessionProvider (SDK auth tải
@@ -614,7 +644,11 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
           (không bị nhốt trong <header> ngắn như bản cũ). Nền trắng,
           cuộn quá ngưỡng thì mờ + blur + bóng nhẹ. */}
       <div
-        className={`sticky top-0 z-50 border-b border-line motion-safe:transition-[background-color,box-shadow,backdrop-filter] motion-safe:duration-300 motion-safe:ease-standard ${
+        className={`sticky top-0 z-50 border-b border-line ${
+          morphReady
+            ? "motion-safe:transition-[background-color,box-shadow,backdrop-filter] motion-safe:duration-300 motion-safe:ease-standard"
+            : ""
+        } ${
           scrolled
             ? "bg-white/85 shadow-[0_2px_16px_rgba(0,0,0,0.06)] backdrop-blur-md"
             : "bg-white"
@@ -649,6 +683,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
             <div className="flex items-center justify-center">
               <Wordmark
                 scrolled={scrolled}
+                morphReady={morphReady}
                 mobile={false}
                 onBrandClick={handleBrandClick}
                 bursts={bursts}
@@ -707,6 +742,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
             <div className="flex items-center justify-center">
               <Wordmark
                 scrolled={scrolled}
+                morphReady={morphReady}
                 mobile
                 onBrandClick={handleBrandClick}
                 bursts={bursts}

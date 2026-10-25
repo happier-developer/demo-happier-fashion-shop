@@ -25,6 +25,21 @@ export default function ScrollToTop() {
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);
 
+  // Cổng transition giống morph header: layout effect ở dưới đồng bộ
+  // trạng thái từ scrollY thật TRƯỚC paint, nhưng nếu class transition
+  // đã có sẵn thì lần đồng bộ đầu đó vẫn chạy qua transition — reload
+  // giữa trang sẽ thấy nút trượt/mờ dần vào thay vì hiện ngay ở trạng
+  // thái đúng. ready chỉ bật ở passive effect (SAU paint đầu tiên) nên
+  // lần đồng bộ đầu áp dụng tức thì; mọi lần cuộn thật sau đó vẫn có
+  // transition 300ms như cũ. Đặt cờ trong callback requestAnimationFrame
+  // (không setState trực tiếp trong thân effect) để không vi phạm
+  // react-hooks/set-state-in-effect. Reduced-motion vẫn bị chặn bởi motion-safe:.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   useIsomorphicLayoutEffect(() => {
     let ticking = false;
     const update = () => {
@@ -62,7 +77,9 @@ export default function ScrollToTop() {
       type="button"
       onClick={scrollToTop}
       aria-label="Về đầu trang"
-      className={`fixed right-6 bottom-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:transition-all motion-safe:duration-300 ${
+      className={`fixed right-6 bottom-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:outline-none ${
+        ready ? "motion-safe:transition-all motion-safe:duration-300" : ""
+      } ${
         visible
           ? "translate-y-0 opacity-100"
           : "invisible pointer-events-none translate-y-2 opacity-0"
