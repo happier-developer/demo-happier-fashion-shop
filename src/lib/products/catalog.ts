@@ -187,6 +187,25 @@ export const getCatalogData = unstable_cache(fetchCatalogData, [
   "catalog-san-pham",
 ], { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE_SECONDS });
 
+/** Chỉ danh sách danh mục (tên + slug) cho header: menu thả xuống
+ *  "Sản phẩm" và chip lựa chọn nhanh của overlay tìm kiếm. Cùng bảng
+ *  và thứ tự với fetchCatalogData, cùng tag `catalog` nên admin
+ *  updateTag là header nhận danh mục mới. Hàm mới thêm vào — logic
+ *  tìm kiếm (searchProductIds) và các fetcher khác không đổi. */
+async function fetchCategoryList(): Promise<
+  { name: string; slug: string }[]
+> {
+  const db = getDb();
+  return db
+    .select({ name: categories.name, slug: categories.slug })
+    .from(categories)
+    .orderBy(asc(categories.sortOrder), asc(categories.name));
+}
+
+export const getCategoryList = unstable_cache(fetchCategoryList, [
+  "catalog-category-list",
+], { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE_SECONDS });
+
 export const getProductDetail = unstable_cache(
   fetchProductDetail,
   ["catalog-product-detail"],
