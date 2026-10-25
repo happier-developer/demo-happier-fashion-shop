@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ProductWithVariants } from "@/lib/products/catalog";
-import { shopConfig } from "@/lib/config";
 import HotDealCard from "./HotDealCard";
 
 // Carousel "Happier Hot Deal" theo UI tham chiếu "OUR FAVOURITES":
-// tiêu đề căn giữa với 2 mũi tên nhỏ ôm hai bên (‹ Happier Hot Deal ›),
-// phụ đề căn giữa bên dưới; dãy sản phẩm trượt theo trang — 4/trang ở
+// tiêu đề căn giữa với 2 mũi tên nhỏ ôm hai bên (‹ Happier Hot Deal ›);
+// dãy sản phẩm trượt theo trang — 4/trang ở
 // desktop, 2 ở tablet, 1 ở mobile (12 sản phẩm = 3 trang desktop).
 // Thẻ rút gọn HotDealCard chỉ dùng riêng ở đây: ảnh + tên + giá, toàn
 // bộ thẻ là link tới trang chi tiết; không badge, không nút tim, không
@@ -75,9 +74,6 @@ export default function HotDealCarousel({
             <ChevronRight className="h-6 w-6" aria-hidden />
           </button>
         </div>
-        <p className="mt-2 text-base text-muted">
-          Những sản phẩm được yêu thích nhất tại {shopConfig.name}.
-        </p>
       </div>
 
       <div className="overflow-hidden">
