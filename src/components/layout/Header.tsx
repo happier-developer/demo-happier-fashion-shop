@@ -10,10 +10,11 @@
 //   cha chứa nó (đó chính là lỗi nav cũ: cuộn xuống là trôi mất).
 // - Wordmark morph khi cuộn quá ~32px: thu nhỏ lại, hàng đổi nền
 //   mờ + bóng nhẹ; hàng luôn hiển thị, không cuộn đi.
-// - "Sản phẩm" có menu thả xuống (desktop) / xổ accordion (mobile)
-//   với "Tất cả sản phẩm" + từng danh mục, link theo ?danh-muc=slug
-//   sẵn có của trang danh sách. Không còn mục "Trang chủ" trong nav
-//   (logo vẫn dẫn về trang chủ).
+// - "Sản phẩm" có mega menu full chiều rộng hàng header (desktop) /
+//   xổ accordion nhóm Danh mục / Bộ sưu tập (mobile), với "Tất cả
+//   sản phẩm" + từng danh mục, link theo ?danh-muc=slug sẵn có của
+//   trang danh sách. Không còn mục "Trang chủ" trong nav (logo vẫn
+//   dẫn về trang chủ).
 // - Icon tìm kiếm mở overlay toàn màn hình (thay ô nhập nở ở dải
 //   tiện ích cũ): ô nhập lớn + chip lựa chọn nhanh = "Tất cả sản
 //   phẩm" + mọi danh mục. Submit vẫn là GET form → /san-pham?q=…
@@ -110,11 +111,106 @@ function NavLink({
   );
 }
 
-/** Mục "Sản phẩm" ở nav desktop: link tới /san-pham + menu thả xuống
- *  khi hover/focus; đóng khi rời chuột, blur khỏi mục, hoặc Escape.
- *  Menu là con của <li> cao toàn hàng nên top-full = đúng mép dưới
- *  của hàng header, không bị cắt bởi ancestor nào (không có
- *  overflow-hidden trên đường từ menu lên khung layout). */
+/** Slug của 4 danh mục mùa: dùng để tách nhóm "Bộ sưu tập" khỏi
+ *  danh mục thường trong mega menu (desktop) và accordion (mobile).
+ *  Danh mục mùa mới trong tương lai chưa có trong tập này sẽ rơi vào
+ *  nhóm "Danh mục" — cập nhật tập slug khi thêm mùa mới. */
+const SEASON_SLUGS = new Set(["xuan", "ha", "thu", "dong"]);
+
+/** Tách danh sách danh mục live thành danh mục thường + mùa, giữ
+ *  nguyên thứ tự catalogue và href của từng mục. */
+function splitCategories(categories: HeaderCategory[]): {
+  regular: HeaderCategory[];
+  seasons: HeaderCategory[];
+} {
+  return {
+    regular: categories.filter((c) => !SEASON_SLUGS.has(c.slug)),
+    seasons: categories.filter((c) => SEASON_SLUGS.has(c.slug)),
+  };
+}
+
+/** Panel mega menu của "Sản phẩm" (desktop): phủ full chiều rộng của
+ *  hàng header, nội dung bên trong căn theo Container chuẩn của site
+ *  (cùng max-width / padding ngang với nội dung header) nên panel
+ *  trông bề thế chứ không phải cột hẹp. Panel là con của <li> nhưng
+ *  <li> KHÔNG relative, nên panel neo vào tổ tiên positioned gần
+ *  nhất là hàng sticky (sticky vốn đã là positioned) — inset-x-0 =
+ *  đúng mép trái → mép phải của hàng header, top-full = đúng mép
+ *  dưới hàng. Không có overflow-hidden trên đường từ panel lên hàng
+ *  nên panel không bị cắt; hàng sticky z-50 nên panel nổi trên hero.
+ *  Vì panel vẫn nằm trong <li> nên tab order, hover/focus mở, rời
+ *  chuột/blur/Escape đóng của ProductsDropdown giữ nguyên. */
+function MegaMenuPanel({
+  categories,
+  onNavigate,
+}: {
+  categories: HeaderCategory[];
+  onNavigate?: () => void;
+}) {
+  const { regular, seasons } = splitCategories(categories);
+  const groupHeadingClasses =
+    "border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted";
+  const groupLinkClasses =
+    "-mx-3 block rounded-[2px] px-3 py-2 text-[15px] text-muted transition duration-state ease-standard hover:bg-line/50 hover:text-ink";
+  return (
+    <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-white shadow-[0_24px_48px_rgba(0,0,0,0.10)]">
+      <Container>
+        <div className="grid grid-cols-3 gap-12 py-10">
+          {/* Cột nổi bật: chỉ dùng đích đã có sẵn, không bịa link. */}
+          <div>
+            <Link
+              href="/san-pham"
+              onClick={onNavigate}
+              className="font-display text-[26px] leading-snug font-semibold text-ink transition duration-state ease-standard hover:underline hover:underline-offset-4"
+            >
+              Tất cả sản phẩm →
+            </Link>
+            <div className="mt-5 border-t border-line" />
+          </div>
+          {regular.length > 0 && (
+            <div>
+              <p className={groupHeadingClasses}>Danh mục</p>
+              <ul className="mt-4 space-y-1">
+                {regular.map((category) => (
+                  <li key={category.slug}>
+                    <Link
+                      href={categoryHref(category.slug)}
+                      onClick={onNavigate}
+                      className={groupLinkClasses}
+                    >
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {seasons.length > 0 && (
+            <div>
+              <p className={groupHeadingClasses}>Bộ sưu tập</p>
+              <ul className="mt-4 space-y-1">
+                {seasons.map((category) => (
+                  <li key={category.slug}>
+                    <Link
+                      href={categoryHref(category.slug)}
+                      onClick={onNavigate}
+                      className={groupLinkClasses}
+                    >
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </Container>
+    </div>
+  );
+}
+
+/** Mục "Sản phẩm" ở nav desktop: link tới /san-pham + mega menu khi
+ *  hover/focus; đóng khi rời chuột, blur khỏi mục, hoặc Escape. */
 function ProductsDropdown({
   categories,
   pathname,
@@ -131,11 +227,9 @@ function ProductsDropdown({
       setOpen(false);
     }
   };
-  const itemClasses =
-    "block px-5 py-2.5 text-sm transition duration-state ease-standard hover:bg-line/50 hover:text-ink";
   return (
     <li
-      className="relative flex items-stretch"
+      className="flex items-stretch"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       onFocus={() => setOpen(true)}
@@ -163,25 +257,7 @@ function ProductsDropdown({
         />
       </Link>
       {open && (
-        <div className="absolute top-full left-0 z-50 min-w-60 border border-line bg-white py-2 shadow-[0_12px_32px_rgba(0,0,0,0.10)]">
-          <Link
-            href="/san-pham"
-            onClick={onNavigate}
-            className={`${itemClasses} font-medium text-ink`}
-          >
-            Tất cả sản phẩm
-          </Link>
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={categoryHref(category.slug)}
-              onClick={onNavigate}
-              className={`${itemClasses} text-muted`}
-            >
-              {category.name}
-            </Link>
-          ))}
-        </div>
+        <MegaMenuPanel categories={categories} onNavigate={onNavigate} />
       )}
     </li>
   );
@@ -609,6 +685,10 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
     ? categoryHref("thu")
     : "/san-pham";
 
+  // Nhóm danh mục cho accordion mobile (cùng cách tách với mega menu).
+  const { regular: mobileRegular, seasons: mobileSeasons } =
+    splitCategories(categories);
+
   const searchButtonClasses =
     "rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta";
   const accountLinkClasses =
@@ -776,7 +856,8 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
       </div>
 
       {/* Menu mobile: các mục nav + accordion "Sản phẩm" (Tất cả sản
-          phẩm + danh mục) + tài khoản + quản trị (chỉ admin). */}
+          phẩm + danh mục nhóm Danh mục / Bộ sưu tập như mega menu)
+          + tài khoản + quản trị (chỉ admin). */}
       {mobileOpen && (
         <nav
           id="mobile-nav"
@@ -827,17 +908,42 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                             Tất cả sản phẩm
                           </Link>
                         </li>
-                        {categories.map((category) => (
-                          <li key={category.slug}>
-                            <Link
-                              href={categoryHref(category.slug)}
-                              onClick={() => setMobileOpen(false)}
-                              className="block rounded-[2px] px-3 py-2.5 text-[15px] text-muted transition duration-state ease-standard active:bg-line/60 hover:bg-line/50 hover:text-ink"
-                            >
-                              {category.name}
-                            </Link>
-                          </li>
-                        ))}
+                        {mobileRegular.length > 0 && (
+                          <>
+                            <li className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                              Danh mục
+                            </li>
+                            {mobileRegular.map((category) => (
+                              <li key={category.slug}>
+                                <Link
+                                  href={categoryHref(category.slug)}
+                                  onClick={() => setMobileOpen(false)}
+                                  className="block rounded-[2px] px-3 py-2.5 text-[15px] text-muted transition duration-state ease-standard active:bg-line/60 hover:bg-line/50 hover:text-ink"
+                                >
+                                  {category.name}
+                                </Link>
+                              </li>
+                            ))}
+                          </>
+                        )}
+                        {mobileSeasons.length > 0 && (
+                          <>
+                            <li className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                              Bộ sưu tập
+                            </li>
+                            {mobileSeasons.map((category) => (
+                              <li key={category.slug}>
+                                <Link
+                                  href={categoryHref(category.slug)}
+                                  onClick={() => setMobileOpen(false)}
+                                  className="block rounded-[2px] px-3 py-2.5 text-[15px] text-muted transition duration-state ease-standard active:bg-line/60 hover:bg-line/50 hover:text-ink"
+                                >
+                                  {category.name}
+                                </Link>
+                              </li>
+                            ))}
+                          </>
+                        )}
                       </ul>
                     )}
                   </li>
