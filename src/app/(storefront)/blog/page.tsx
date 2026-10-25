@@ -24,7 +24,14 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function BlogListPage() {
-  const posts = await getBlogPosts();
+  let posts: Awaited<ReturnType<typeof getBlogPosts>> = [];
+  try {
+    posts = await getBlogPosts();
+  } catch (error) {
+    // Build không có DATABASE_URL (như CI) → trang render rỗng ở build,
+    // runtime có DB thì ISR làm mới ngay; không được làm gãy build.
+    console.error("Không tải được bài viết blog từ DB:", error);
+  }
   return (
     <Container className="py-12 md:py-16">
       <div className="mb-10 flex flex-col items-start gap-4">

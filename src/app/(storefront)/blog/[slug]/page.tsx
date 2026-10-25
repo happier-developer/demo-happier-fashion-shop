@@ -18,8 +18,15 @@ import { shopConfig } from "@/lib/config";
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  const rows = await getBlogSlugsForSitemap();
-  return rows.map((row) => ({ slug: row.slug }));
+  try {
+    const rows = await getBlogSlugsForSitemap();
+    return rows.map((row) => ({ slug: row.slug }));
+  } catch (error) {
+    // Build không có DATABASE_URL (như CI) → không prerender slug nào;
+    // trang vẫn render theo yêu cầu ở runtime.
+    console.error("Không tải được slug blog cho generateStaticParams:", error);
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -28,7 +35,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  let post: Awaited<ReturnType<typeof getBlogPostBySlug>> = null;
+  try {
+    post = await getBlogPostBySlug(slug);
+  } catch (error) {
+    console.error("Không tải được bài viết blog cho metadata:", error);
+  }
   if (!post) return { title: "Không tìm thấy bài viết" };
   return {
     title: post.title,
@@ -49,7 +61,35 @@ export default async function BlogDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  let post: Awaited<ReturnType<typeof getBlogPostBySlug>> = null;
+  let loadError = false;
+  try {
+    post = await getBlogPostBySlug(slug);
+  } catch (error) {
+    console.error("Không tải được bài viết blog từ DB:", error);
+    loadError = true;
+  }
+  if (loadError) {
+    return (
+      <Container className="py-12 md:py-16">
+        <div className="mx-auto max-w-3xl text-center">
+          <h1 className="font-display text-3xl font-semibold text-ink">
+            Không tải được bài viết
+          </h1>
+          <p className="mt-3 text-base leading-relaxed text-muted">
+            Đã có lỗi khi tải bài viết, vui lòng thử lại sau.
+          </p>
+          <Link
+            href="/blog"
+            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            Tất cả bài viết
+          </Link>
+        </div>
+      </Container>
+    );
+  }
   if (!post) notFound();
   const paragraphs = post.content
     .split(/\n\s*\n/)
