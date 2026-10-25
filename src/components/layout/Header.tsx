@@ -34,6 +34,7 @@ import {
 } from "react";
 import {
   ChevronDown,
+  Heart,
   Menu as MenuIcon,
   Search,
   ShoppingCart,
@@ -43,6 +44,7 @@ import {
 import Container from "@/components/ui/Container";
 import { mainNav, shopConfig } from "@/lib/config";
 import { useCart } from "@/lib/cart/cart-context";
+import FavoritesButton from "./FavoritesButton";
 import SessionProvider from "./SessionProvider";
 import { useSessionInfo } from "./SessionContext";
 
@@ -651,6 +653,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                 <User className="h-5 w-5" aria-hidden />
                 <span className="sr-only">{accountLabel}</span>
               </Link>
+              <FavoritesButton />
               <CartButton
                 totalQuantity={totalQuantity}
                 showBadge={showBadge}
@@ -695,6 +698,7 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
               >
                 <Search className="h-5 w-5" aria-hidden />
               </button>
+              <FavoritesButton />
               <CartButton
                 totalQuantity={totalQuantity}
                 showBadge={showBadge}
@@ -789,6 +793,16 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
                   </li>
                 ),
               )}
+              <li>
+                <Link
+                  href="/yeu-thich"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-[2px] px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
+                >
+                  <Heart className="h-5 w-5" aria-hidden />
+                  Yêu thích
+                </Link>
+              </li>
               {isAdmin && (
                 <li>
                   <Link

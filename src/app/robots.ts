@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
         "/api",
         "/gio-hang",
         "/thanh-toan",
+        "/yeu-thich",
       ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
