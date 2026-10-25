@@ -9,7 +9,7 @@
 
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "happier-fashion-favorites";
 const FAVORITES_EVENT = "happier-fashion-favorites-changed";
@@ -58,6 +58,18 @@ export default function FavoritesButton() {
   );
   const count = favorites.length;
 
+  // Pop chỉ chạy khi số lượng ĐỔI sau lần mount đầu (fix glitch khi
+  // load): lần đầu badge hiện tĩnh, không animate-pop; đổi số lượng
+  // thì pop 1 lần. Cơ chế snapshot/subscription giữ nguyên.
+  const prevCountRef = useRef<number | null>(null);
+  const [pop, setPop] = useState(false);
+  useEffect(() => {
+    if (prevCountRef.current !== null && prevCountRef.current !== count) {
+      setPop(true);
+    }
+    prevCountRef.current = count;
+  }, [count]);
+
   return (
     <Link
       href="/yeu-thich"
@@ -70,7 +82,7 @@ export default function FavoritesButton() {
       {count > 0 && (
         <span
           key={count}
-          className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 animate-pop place-items-center rounded-full bg-cta px-1 text-[11px] font-bold text-white"
+          className={`absolute -top-0.5 -right-0.5 grid h-5 min-w-5 ${pop ? "animate-pop " : ""}place-items-center rounded-full bg-cta px-1 text-[11px] font-bold text-white`}
         >
           {count}
         </span>

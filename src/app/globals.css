@@ -310,6 +310,18 @@ body {
   }
 }
 
+/* Parallax hero bộ sưu tập (fix glitch khi load): ảnh render sẵn ở
+   tỉ lệ 1.2× ngay từ lần paint đầu để không bật từ 1× lên 1.2× khi
+   effect parallax chạy; effect vẫn ghi đè bằng inline transform khi
+   cuộn. Chỉ áp khi motion-safe — prefers-reduced-motion giữ cover 1×
+   như cũ (không đổi giao diện cho nhóm này). Chỉ transform, không
+   layout. */
+@media (prefers-reduced-motion: no-preference) {
+  .parallax-initial {
+    transform: translate3d(0, 0, 0) scale(1.2);
+  }
+}
+
 /* Editorial serif override (font fix 2026-10-24): unlayered rule, placed
    last so it beats layered Tailwind utilities in the cascade. Forces
    .font-display elements to resolve Playfair Display directly instead of

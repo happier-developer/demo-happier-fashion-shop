@@ -4,6 +4,7 @@ import { Shirt } from "lucide-react";
 import { aboutContent } from "@/lib/config";
 import Container from "@/components/ui/Container";
 import ProductCard from "@/components/product/ProductCard";
+import FadeInOnChange from "@/components/ui/FadeInOnChange";
 import type { Category } from "@/lib/db/schema";
 import {
   getCatalogData,
@@ -310,17 +311,18 @@ export default async function CatalogPage({
           </p>
         </div>
       ) : (
-        // key theo bộ lọc: đổi lọc → lưới remount → animation fade-in
-        // chạy lại (micro-interaction v2.2), kèm press scale 0.95 đã có
-        // sẵn ở pillClasses cho mọi tab lọc.
-        <div
-          key={`${activeCategory ?? "all"}|${activeSize ?? "all"}|${activeColor ?? "all"}|${activePrice ?? "all"}|${activeSort}|${query || "all"}`}
-          className="grid animate-fade-in grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3"
+        // Fade-in chỉ chạy khi bộ lọc ĐỔI sau lần mount đầu (fix glitch
+        // khi load): lần đầu lưới hiện tĩnh, đổi lọc → FadeInOnChange
+        // remount lưới kèm animate-fade-in (micro-interaction v2.2 giữ
+        // nguyên), kèm press scale 0.95 đã có sẵn ở pillClasses.
+        <FadeInOnChange
+          changeKey={`${activeCategory ?? "all"}|${activeSize ?? "all"}|${activeColor ?? "all"}|${activePrice ?? "all"}|${activeSort}|${query || "all"}`}
+          className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-3"
         >
           {visible.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
-        </div>
+        </FadeInOnChange>
       )}
     </Container>
   );

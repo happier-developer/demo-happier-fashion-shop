@@ -1,9 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 
 // Nút cuộn về đầu trang, dạng tròn với vòng tiến trình (theo lựa chọn của Duy):
+// vòng SVG quanh nút đầy dần theo % trang đã cuộn, nút chỉ hiện khi cuộn quá 600px.
+// z-40: thấp hơn nav sticky (z-50), modal xem nhanh (z-[70]) và lightbox (z-[80])
+// nên nút không bao giờ nổi lên trên modal đang mở.
+
+// Layout effect đồng hình (chạy trước paint ở client, effect thường ở
+// server để tránh cảnh báo SSR): trạng thái ban đầu đọc từ scrollY
+// thật nên reload giữa trang không bật nút lên muộn (fix glitch khi
+// load); server vẫn render ẩn như cũ nên không lệch hydration.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 // vòng SVG quanh nút đầy dần theo % trang đã cuộn, nút chỉ hiện khi cuộn quá 600px.
 // z-40: thấp hơn nav sticky (z-50), modal xem nhanh (z-[70]) và lightbox (z-[80])
 // nên nút không bao giờ nổi lên trên modal đang mở.
@@ -15,7 +25,7 @@ export default function ScrollToTop() {
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     let ticking = false;
     const update = () => {
       ticking = false;

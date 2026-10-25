@@ -133,11 +133,16 @@ function FooterAdminLink() {
 function FooterAdminLinkInner() {
   const { isAdmin } = useSessionInfo();
   if (!isAdmin) return null;
+  // Từ lg trở lên link đứng tuyệt đối ở khoảng trống giữa dòng ghi chú
+  // và cụm phải (right-full + mr-5): vị trí nhìn thấy y hệt khi render
+  // inline, nhưng link không tham gia flex layout nên việc nó xuất hiện
+  // muộn (sau khi /api/me trả về) không đẩy dòng ghi chú hay nút "Về
+  // đầu trang" (fix glitch khi load). Dưới lg giữ inline như cũ.
   return (
     <Link
       href="/admin"
       aria-label="Quản trị — mở Dashboard admin"
-      className="inline-flex items-center gap-1.5 font-medium text-white transition hover:text-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      className="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-white transition hover:text-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:absolute lg:right-full lg:top-1/2 lg:mr-5 lg:-translate-y-1/2"
     >
       <LayoutDashboard className="h-4 w-4" aria-hidden />
       Quản trị
@@ -361,7 +366,7 @@ export default function Footer() {
               Happier Solutions
             </a>
           </p>
-          <div className="flex items-center gap-5">
+          <div className="relative flex items-center gap-5">
             <FooterAdminLink />
             <a
               href="#top"

@@ -27,6 +27,7 @@ import { usePathname } from "next/navigation";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type FocusEvent as ReactFocusEvent,
@@ -47,6 +48,12 @@ import { useCart } from "@/lib/cart/cart-context";
 import FavoritesButton from "./FavoritesButton";
 import SessionProvider from "./SessionProvider";
 import { useSessionInfo } from "./SessionContext";
+
+// Layout effect đồng hình (chạy trước paint ở client, effect thường ở
+// server để tránh cảnh báo SSR): dùng cho morph header để reload giữa
+// trang không nháy header cỡ lớn rồi mới thu nhỏ (fix glitch khi load).
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export interface HeaderCategory {
   name: string;
@@ -181,7 +188,9 @@ function ProductsDropdown({
 }
 
 /** Nút giỏ hàng icon-only: icon + badge số lượng, giữ nguyên hành vi
- *  cũ (badge chỉ hiện khi đã hydrate và số lượng > 0). */
+ *  cũ (badge chỉ hiện khi đã hydrate và số lượng > 0). Pop chỉ chạy
+ *  khi số lượng ĐỔI sau lần mount đầu (fix glitch khi load): lần đầu
+ *  badge hiện tĩnh, không animate-pop; đổi số lượng thì pop 1 lần. */
 function CartButton({
   totalQuantity,
   showBadge,
@@ -189,6 +198,17 @@ function CartButton({
   totalQuantity: number;
   showBadge: boolean;
 }) {
+  const prevCountRef = useRef<number | null>(null);
+  const [pop, setPop] = useState(false);
+  useEffect(() => {
+    if (
+      prevCountRef.current !== null &&
+      prevCountRef.current !== totalQuantity
+    ) {
+      setPop(true);
+    }
+    prevCountRef.current = totalQuantity;
+  }, [totalQuantity]);
   return (
     <Link
       href="/gio-hang"
@@ -201,7 +221,7 @@ function CartButton({
       {showBadge && (
         <span
           key={totalQuantity}
-          className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 animate-pop place-items-center rounded-full bg-cta px-1 text-[11px] font-bold text-white"
+          className={`absolute -top-0.5 -right-0.5 grid h-5 min-w-5 ${pop ? "animate-pop " : ""}place-items-center rounded-full bg-cta px-1 text-[11px] font-bold text-white`}
         >
           {totalQuantity}
         </span>
@@ -469,7 +489,11 @@ function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
   // mờ/blur/bóng; hàng luôn sticky và luôn hiển thị, chiều cao hàng
   // cố định nên nội dung bên dưới không bị nhảy.
   const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
+  // Layout effect: đồng bộ từ scrollY thật TRƯỚC lần paint đầu sau
+  // hydration nên reload giữa trang không nháy header cỡ lớn rồi mới
+  // thu nhỏ (fix glitch khi load); server vẫn render scrolled=false
+  // như cũ nên không lệch hydration.
+  useIsomorphicLayoutEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 32);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });

@@ -81,7 +81,12 @@ export default function CollectionParallaxImage({
 
   return (
     <div ref={frameRef} className="absolute inset-0 overflow-hidden">
-      <div ref={layerRef} className="absolute inset-0 will-change-transform">
+      {/* parallax-initial: ảnh render sẵn ở tỉ lệ 1.2× (xem globals.css)
+          để lần paint đầu không bật từ 1× lên 1.2× khi effect chạy. */}
+      <div
+        ref={layerRef}
+        className="parallax-initial absolute inset-0 will-change-transform"
+      >
         <Image src={src} alt={alt} fill sizes="100vw" className="object-cover" />
       </div>
     </div>
