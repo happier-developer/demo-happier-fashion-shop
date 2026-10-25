@@ -219,14 +219,27 @@ body {
 .nav-sweep:not([aria-current="page"])::after {
   content: "";
   position: absolute;
-  right: 20px;
-  bottom: 8px;
-  left: 20px;
+  right: 14px;
+  bottom: 12px;
+  left: 14px;
   height: 2px;
   background: var(--color-ink);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 300ms ease-out;
+}
+
+/* Nav desktop active: vạch ::after cố định cùng vị trí với vạch quét
+   khi hover (cách mép dưới hàng 12px), thay cho gạch chân Tailwind
+   bám theo baseline chữ — để gạch không dính sát nội dung phía dưới. */
+.nav-sweep[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  left: 14px;
+  height: 2px;
+  background: var(--color-ink);
 }
 
 /* Ghi đè transition của nút (Tailwind `transition`): phải liệt kê cả
@@ -264,8 +277,8 @@ body {
     opacity: 1;
   }
 
-  /* Nav desktop: gạch chân quét ngang từ trái sang; link active giữ
-     nguyên gạch chân Tailwind, không vẽ thêm vạch ::after. */
+  /* Nav desktop: gạch chân quét ngang từ trái sang; link active có
+     vạch ::after cố định cùng vị trí (xem quy tắc trên). */
   .nav-sweep:not([aria-current="page"]):hover::after {
     transform: scaleX(1);
   }
