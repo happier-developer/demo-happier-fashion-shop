@@ -6,7 +6,7 @@
 // TUYỆT ĐỐI không dùng file này cho dữ liệu đơn hàng/tài khoản/admin.
 
 import { unstable_cache } from "next/cache";
-import { and, asc, eq, ne } from "drizzle-orm";
+import { and, asc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   categories,
@@ -82,6 +82,39 @@ async function fetchFeaturedProducts(): Promise<ProductWithVariants[]> {
     .orderBy(asc(products.sortOrder), asc(products.name))
     .limit(12);
   return attachVariants(rows);
+}
+
+/** Tìm id sản phẩm theo từ khóa — KHÔNG bọc unstable_cache.
+ *  Lý do: kết quả phụ thuộc vào chuỗi truy vấn `q` của từng request,
+ *  không phải dữ liệu catalogue chung. Lọc vẫn chạy trên catalogue đã
+ *  cache ở trang danh sách (giao của tập này với tập đã lọc sẵn), nên
+ *  cache catalogue không bao giờ làm sai kết quả tìm kiếm.
+ *  Khớp không dấu nhờ extension Postgres `unaccent` (migration 0001):
+ *  unaccent() bỏ dấu tiếng Việt và map đ→d cả hai phía (tên/mô tả
+ *  trong DB lẫn từ khóa người dùng gõ), nên "ao" khớp "áo", "dam" khớp
+ *  "đầm", "QUAN" khớp "quần"; gõ có dấu vẫn khớp như cũ. Mỗi từ trong
+ *  truy vấn phải xuất hiện (AND); một từ khớp tên HOẶC mô tả. */
+function escapeLikeTerm(term: string): string {
+  return term
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
+export async function searchProductIds(
+  terms: string[],
+): Promise<Set<string>> {
+  if (terms.length === 0) return new Set<string>();
+  const db = getDb();
+  const conditions = terms.map((term) => {
+    const pattern = `%${escapeLikeTerm(term)}%`;
+    return sql`(unaccent(${products.name}) ILIKE unaccent(${pattern}) OR unaccent(coalesce(${products.description}, '')) ILIKE unaccent(${pattern}))`;
+  });
+  const rows = await db
+    .select({ id: products.id })
+    .from(products)
+    .where(and(...conditions));
+  return new Set(rows.map((row) => row.id));
 }
 
 async function fetchCatalogData(): Promise<CatalogData> {
