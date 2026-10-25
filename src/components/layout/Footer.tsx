@@ -10,9 +10,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { ArrowUp, ArrowUpRight } from "lucide-react";
+import { ArrowUp, ArrowUpRight, LayoutDashboard } from "lucide-react";
 import Container from "@/components/ui/Container";
 import { mainNav, shopConfig } from "@/lib/config";
+import SessionProvider from "./SessionProvider";
+import { useSessionInfo } from "./SessionContext";
 
 /** Same brand-click ink splash as the header masthead wordmark (see
  *  Header.tsx): droplets + ripple ring at the click point, and a
@@ -111,6 +113,34 @@ const indexLinks = [
   ...mainNav,
   { label: "Giỏ hàng", href: "/gio-hang" },
 ] as const;
+
+/** Link Quản trị ở colophon — chuyển từ dải tiện ích của header cũ
+ *  sang đây khi header đổi sang phong cách HUSH (một hàng, chỉ icon).
+ *  Guard y hệt header cũ: chỉ render khi /api/me xác nhận admin. Footer
+ *  nằm ngoài SessionProvider của Header nên tự bọc một provider riêng
+ *  (chunk SDK đã tải lười chung; chỉ thêm một lần gọi /api/me). */
+function FooterAdminLink() {
+  return (
+    <SessionProvider>
+      <FooterAdminLinkInner />
+    </SessionProvider>
+  );
+}
+
+function FooterAdminLinkInner() {
+  const { isAdmin } = useSessionInfo();
+  if (!isAdmin) return null;
+  return (
+    <Link
+      href="/admin"
+      aria-label="Quản trị — mở Dashboard admin"
+      className="inline-flex items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+    >
+      <LayoutDashboard className="h-4 w-4" aria-hidden />
+      Quản trị
+    </Link>
+  );
+}
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -281,13 +311,16 @@ export default function Footer() {
           <p className="text-[13px]">
             Colophon — Tiêu đề: Playfair Display · Nội dung: Be Vietnam Pro
           </p>
-          <a
-            href="#top"
-            className="inline-flex items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-          >
-            Về đầu trang
-            <ArrowUp className="h-4 w-4" aria-hidden />
-          </a>
+          <div className="flex items-center gap-5">
+            <FooterAdminLink />
+            <a
+              href="#top"
+              className="inline-flex items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+            >
+              Về đầu trang
+              <ArrowUp className="h-4 w-4" aria-hidden />
+            </a>
+          </div>
         </div>
       </Container>
     </footer>

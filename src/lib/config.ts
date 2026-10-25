@@ -113,7 +113,6 @@ export const mapDirectionsUrl = `https://www.google.com/maps/search/?api=1&query
 )}`;
 
 export const mainNav = [
-  { label: "Trang chủ", href: "/" },
   { label: "Sản phẩm", href: "/san-pham" },
   { label: "Giới thiệu", href: "/gioi-thieu" },
   { label: "Blog", href: "/blog" },

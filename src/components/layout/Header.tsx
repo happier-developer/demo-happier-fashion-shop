@@ -1,20 +1,39 @@
 "use client";
 
-// Header storefront dạng MASTHEAD tạp chí (khác hẳn cấu trúc thanh đơn
-// một hàng của Happier Coffee): 3 tầng riêng biệt — dải tiện ích, dòng
-// masthead với wordmark serif căn giữa, và hàng điều hướng dính (sticky)
-// với vạch hairline ngăn cách các mục. Masthead cuộn đi, chỉ hàng nav
-// dính lại trên cùng.
-// Trạng thái active của điều hướng theo pathname hiện tại; trên mobile
-// dùng nút menu mở/đóng được (có aria-expanded, đóng khi chọn mục hoặc
-// đổi trang). Badge giỏ, nhãn tài khoản và link Quản trị (chỉ admin)
-// giữ nguyên logic hiển thị của bản cũ — chỉ đổi vị trí trình bày.
+// Header storefront phong cách HUSH (thay masthead 3 tầng cũ):
+// - Dải thông báo màu xanh nhạt phía trên (KHÔNG dính — cuộn đi).
+// - MỘT hàng header duy nhất, dính thật (sticky): nav chữ hoa bên
+//   trái, wordmark serif căn giữa, icon tìm kiếm / tài khoản / giỏ
+//   bên phải. Hàng này là con trực tiếp của khung layout cao toàn
+//   trang (xem (storefront)/layout.tsx) — KHÔNG nằm trong thẻ
+//   <header> ngắn như bản cũ, vì sticky chỉ dính trong phạm vi thẻ
+//   cha chứa nó (đó chính là lỗi nav cũ: cuộn xuống là trôi mất).
+// - Wordmark morph khi cuộn quá ~32px: thu nhỏ lại, hàng đổi nền
+//   mờ + bóng nhẹ; hàng luôn hiển thị, không cuộn đi.
+// - "Sản phẩm" có menu thả xuống (desktop) / xổ accordion (mobile)
+//   với "Tất cả sản phẩm" + từng danh mục, link theo ?danh-muc=slug
+//   sẵn có của trang danh sách. Không còn mục "Trang chủ" trong nav
+//   (logo vẫn dẫn về trang chủ).
+// - Icon tìm kiếm mở overlay toàn màn hình (thay ô nhập nở ở dải
+//   tiện ích cũ): ô nhập lớn + chip lựa chọn nhanh = "Tất cả sản
+//   phẩm" + mọi danh mục. Submit vẫn là GET form → /san-pham?q=…
+//   nên logic tìm không dấu ở backend không đổi.
+// - Không còn tagline dưới wordmark trong header (tagline vẫn nằm
+//   ở metadata/hero copy); link Quản trị (chỉ admin) chuyển xuống
+//   colophon của footer.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
-  LayoutDashboard,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent as ReactFocusEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
+import {
+  ChevronDown,
   Menu as MenuIcon,
   Search,
   ShoppingCart,
@@ -26,6 +45,11 @@ import { mainNav, shopConfig } from "@/lib/config";
 import { useCart } from "@/lib/cart/cart-context";
 import SessionProvider from "./SessionProvider";
 import { useSessionInfo } from "./SessionContext";
+
+export interface HeaderCategory {
+  name: string;
+  slug: string;
+}
 
 /** Nhãn rút gọn cho nút tài khoản khi đã đăng nhập: ưu tiên tên gọi
  *  (từ cuối của họ tên), không có tên thì dùng phần trước @ của email. */
@@ -46,6 +70,10 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function categoryHref(slug: string): string {
+  return `/san-pham?danh-muc=${encodeURIComponent(slug)}`;
+}
+
 function NavLink({
   href,
   label,
@@ -62,7 +90,7 @@ function NavLink({
       href={href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
-      className={`nav-sweep px-5 py-3 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
+      className={`nav-sweep flex items-center px-5 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
         active
           ? "font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
           : "text-muted hover:text-ink"
@@ -73,14 +101,89 @@ function NavLink({
   );
 }
 
-/** Nút giỏ hàng dùng chung cho dải tiện ích (desktop) và masthead
- *  (mobile): icon + badge số lượng, giữ nguyên hành vi cũ. */
+/** Mục "Sản phẩm" ở nav desktop: link tới /san-pham + menu thả xuống
+ *  khi hover/focus; đóng khi rời chuột, blur khỏi mục, hoặc Escape.
+ *  Menu là con của <li> cao toàn hàng nên top-full = đúng mép dưới
+ *  của hàng header, không bị cắt bởi ancestor nào (không có
+ *  overflow-hidden trên đường từ menu lên khung layout). */
+function ProductsDropdown({
+  categories,
+  pathname,
+  onNavigate,
+}: {
+  categories: HeaderCategory[];
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const active = isActive(pathname, "/san-pham");
+  const handleBlur = (event: ReactFocusEvent<HTMLLIElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+      setOpen(false);
+    }
+  };
+  const itemClasses =
+    "block px-5 py-2.5 text-sm transition duration-state ease-standard hover:bg-line/50 hover:text-ink";
+  return (
+    <li
+      className="relative flex items-stretch"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={handleBlur}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
+      <Link
+        href="/san-pham"
+        onClick={onNavigate}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-current={active ? "page" : undefined}
+        className={`nav-sweep flex items-center gap-1 px-5 text-sm font-medium tracking-wide uppercase transition duration-state ease-standard active:scale-[0.97] ${
+          active
+            ? "font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
+            : "text-muted hover:text-ink"
+        }`}
+      >
+        Sản phẩm
+        <ChevronDown
+          className={`h-4 w-4 transition-transform duration-state ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
+      </Link>
+      {open && (
+        <div className="absolute top-full left-0 z-50 min-w-60 border border-line bg-white py-2 shadow-[0_12px_32px_rgba(0,0,0,0.10)]">
+          <Link
+            href="/san-pham"
+            onClick={onNavigate}
+            className={`${itemClasses} font-medium text-ink`}
+          >
+            Tất cả sản phẩm
+          </Link>
+          {categories.map((category) => (
+            <Link
+              key={category.slug}
+              href={categoryHref(category.slug)}
+              onClick={onNavigate}
+              className={`${itemClasses} text-muted`}
+            >
+              {category.name}
+            </Link>
+          ))}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** Nút giỏ hàng icon-only: icon + badge số lượng, giữ nguyên hành vi
+ *  cũ (badge chỉ hiện khi đã hydrate và số lượng > 0). */
 function CartButton({
-  showLabel,
   totalQuantity,
   showBadge,
 }: {
-  showLabel: boolean;
   totalQuantity: number;
   showBadge: boolean;
 }) {
@@ -90,10 +193,9 @@ function CartButton({
       aria-label={
         showBadge ? `Giỏ hàng, ${totalQuantity} sản phẩm` : "Giỏ hàng"
       }
-      className="relative inline-flex items-center gap-2 p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+      className="relative inline-flex items-center p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
     >
       <ShoppingCart className="h-5 w-5" aria-hidden />
-      {showLabel && <span className="text-sm font-medium">Giỏ hàng</span>}
       {showBadge && (
         <span
           key={totalQuantity}
@@ -106,59 +208,103 @@ function CartButton({
   );
 }
 
-/** Ô tìm kiếm ở dải tiện ích (desktop): ban đầu chỉ hiện icon + nhãn,
- *  bấm thì nở thành ô nhập; submit là GET form thường → điều hướng
- *  tới /san-pham?q=… (không cần router JS). ESC đóng lại. Trang danh
- *  sách tự đọc ?q và lọc, nên header không cần đọc searchParams. */
-function HeaderSearch() {
-  const [open, setOpen] = useState(false);
-  if (!open) {
-    return (
-      <button
-        type="button"
-        aria-label="Tìm kiếm sản phẩm"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 p-2 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-      >
-        <Search className="h-4 w-4" aria-hidden />
-        <span className="text-sm">Tìm kiếm</span>
-      </button>
-    );
-  }
+/** Overlay tìm kiếm toàn màn hình: nền trắng mờ + blur, ô nhập lớn
+ *  autofocus, chip lựa chọn nhanh ("Tất cả sản phẩm" + mọi danh mục).
+ *  Đóng bằng nút X, bấm ra ngoài vùng nội dung, hoặc Escape; mở thì
+ *  khóa cuộn body. Submit là GET form thường → /san-pham?q=… nên
+ *  không cần router JS và không động vào logic tìm kiếm backend. */
+function SearchOverlay({
+  open,
+  onClose,
+  categories,
+}: {
+  open: boolean;
+  onClose: () => void;
+  categories: HeaderCategory[];
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open, onClose]);
+  if (!open) return null;
   return (
-    <form
-      action="/san-pham"
-      method="get"
-      role="search"
-      className="flex items-center gap-1"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") setOpen(false);
-      }}
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Tìm kiếm sản phẩm"
+      onClick={onClose}
+      className="fixed inset-0 z-[70] bg-white/95 backdrop-blur-sm motion-safe:animate-fade-in"
     >
-      <input
-        type="search"
-        name="q"
-        autoFocus
-        placeholder="Tìm sản phẩm…"
-        aria-label="Tìm kiếm sản phẩm"
-        className="w-44 rounded-[2px] border border-line bg-paper px-2 py-1.5 text-sm text-ink outline-cta placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2"
-      />
-      <button
-        type="submit"
-        aria-label="Tìm kiếm"
-        className="rounded-[2px] p-2 text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+      <div
+        className="mx-auto max-w-3xl px-4 pt-20 md:pt-28"
+        onClick={(event) => event.stopPropagation()}
       >
-        <Search className="h-4 w-4" aria-hidden />
-      </button>
-      <button
-        type="button"
-        aria-label="Đóng tìm kiếm"
-        onClick={() => setOpen(false)}
-        className="rounded-[2px] p-2 text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-      >
-        <X className="h-4 w-4" aria-hidden />
-      </button>
-    </form>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium tracking-[0.25em] text-muted uppercase">
+            Tìm kiếm
+          </p>
+          <button
+            type="button"
+            aria-label="Đóng tìm kiếm"
+            onClick={onClose}
+            className="rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+          >
+            <X className="h-6 w-6" aria-hidden />
+          </button>
+        </div>
+        <form
+          action="/san-pham"
+          method="get"
+          role="search"
+          className="mt-6 flex items-center gap-3 border-b-2 border-ink pb-4"
+        >
+          <Search className="h-7 w-7 shrink-0 text-muted" aria-hidden />
+          <input
+            type="search"
+            name="q"
+            autoFocus
+            placeholder="Tìm sản phẩm…"
+            aria-label="Tìm kiếm sản phẩm"
+            className="min-w-0 flex-1 bg-transparent text-2xl text-ink outline-none placeholder:text-muted md:text-4xl"
+          />
+          <button
+            type="submit"
+            className="shrink-0 rounded-[2px] bg-ink px-5 py-2.5 text-base font-medium text-paper transition duration-state ease-standard active:scale-95 hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+          >
+            Tìm
+          </button>
+        </form>
+        <div className="mt-8">
+          <p className="text-sm text-muted">Lựa chọn nhanh</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/san-pham"
+              className="rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-ink transition duration-state ease-standard hover:border-ink hover:bg-line/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+            >
+              Tất cả sản phẩm
+            </Link>
+            {categories.map((category) => (
+              <Link
+                key={category.slug}
+                href={categoryHref(category.slug)}
+                className="rounded-full border border-line bg-white px-4 py-2 text-sm text-muted transition duration-state ease-standard hover:border-ink hover:bg-line/50 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+              >
+                {category.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -258,27 +404,81 @@ function BrandSplash({
   );
 }
 
-function HeaderInner() {
+/** Wordmark "Happier Fashion": serif, căn giữa nhờ cột grid giữa
+ *  (2 cột 1fr hai bên nên wordmark luôn ở chính giữa hàng). Morph
+ *  theo `scrolled`: chữ lớn ở đầu trang, thu nhỏ khi cuộn quá ngưỡng.
+ *  Chiều cao hàng cố định nên đổi cỡ chữ không làm nội dung dưới
+ *  nhảy. Giữ hiệu ứng hover (giãn tracking + gạch mực quét) và
+ *  splash giọt mực khi bấm như bản cũ. */
+function Wordmark({
+  scrolled,
+  mobile,
+  onBrandClick,
+  bursts,
+  onBurstDone,
+}: {
+  scrolled: boolean;
+  mobile: boolean;
+  onBrandClick: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
+  bursts: Burst[];
+  onBurstDone: (id: number) => void;
+}) {
+  const sizeClasses = mobile
+    ? scrolled
+      ? "text-2xl"
+      : "text-3xl"
+    : scrolled
+      ? "text-3xl xl:text-4xl"
+      : "text-5xl xl:text-6xl";
+  return (
+    <span className="group relative inline-block">
+      <Link
+        href="/"
+        onClick={onBrandClick}
+        aria-label={`${shopConfig.name} — Trang chủ`}
+        className={`font-display text-center leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[font-size,letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide ${sizeClasses}`}
+      >
+        {/* Wrapper inline-block sở hữu gạch quét: box của nó đúng bằng
+            box dòng wordmark nên gạch nằm dưới glyph, không lệch. */}
+        <span className="relative inline-block leading-none">
+          Happier Fashion
+          <span
+            aria-hidden
+            className="absolute -bottom-2.5 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
+          />
+        </span>
+      </Link>
+      {bursts.map((burst) => (
+        <BrandSplash key={burst.id} burst={burst} onDone={onBurstDone} />
+      ))}
+    </span>
+  );
+}
+
+function HeaderInner({ categories }: { categories: HeaderCategory[] }) {
   const pathname = usePathname();
   const { totalQuantity, hydrated } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [announcementVisible, setAnnouncementVisible] = useState(true);
 
-  // Nav morph khi cuộn: hàng nav luôn sticky và luôn hiển thị (không
-  // ẩn khi cuộn xuống); chỉ đổi nền/blur/bóng khi cuộn quá ngưỡng, và
-  // chiều cao hàng không đổi nên nội dung bên dưới không bị nhảy.
-  const [navScrolled, setNavScrolled] = useState(false);
+  // Morph khi cuộn: quá ~32px thì wordmark thu nhỏ + hàng đổi nền
+  // mờ/blur/bóng; hàng luôn sticky và luôn hiển thị, chiều cao hàng
+  // cố định nên nội dung bên dưới không bị nhảy.
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setNavScrolled(window.scrollY > 32);
+    const onScroll = () => setScrolled(window.scrollY > 32);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Phiên đăng nhập + quyền admin lấy từ SessionProvider (HAP-30 vòng 2:
-  // SDK auth tải lười sau lần render đầu, không còn trong JS đầu trang).
-  // Chỉ để HIỂN THỊ: chưa đăng nhập (hoặc phiên chưa tải xong) → nút
-  // "Tài khoản" trỏ trang đăng nhập như trước; đã đăng nhập → hiện
-  // tên/email rút gọn, trỏ /account. Mọi kiểm tra quyền thật vẫn ở server.
+  // Phiên đăng nhập + quyền admin lấy từ SessionProvider (SDK auth tải
+  // lười sau lần render đầu, không còn trong JS đầu trang). Chỉ để
+  // HIỂN THỊ: chưa đăng nhập (hoặc phiên chưa tải xong) → nút tài
+  // khoản trỏ trang đăng nhập như trước; đã đăng nhập → icon tài
+  // khoản trỏ /account. Mọi kiểm tra quyền thật vẫn ở server.
   const { user: sessionUser, isAdmin } = useSessionInfo();
   const accountLabel = sessionUser
     ? shortUserLabel(sessionUser.name ?? undefined, sessionUser.email)
@@ -291,9 +491,11 @@ function HeaderInner() {
   if (pathname !== prevPathname) {
     setPrevPathname(pathname);
     setMobileOpen(false);
+    setMobileProductsOpen(false);
   }
 
   const showBadge = hydrated && totalQuantity > 0;
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
 
   // Brand-click ink splash: burst at the click point + tell the hero
   // blob (homepage only) to splash. Skipped under reduced motion, and
@@ -315,26 +517,105 @@ function HeaderInner() {
     window.dispatchEvent(new CustomEvent(BRAND_SPLASH_EVENT));
   };
 
+  // Link "Mua ngay" của dải thông báo: tới danh sách đã lọc sẵn bộ
+  // sưu tập Thu (slug `thu`) nếu danh mục đó có trong catalogue,
+  // không thì về danh sách đầy đủ.
+  const thuHref = categories.some((c) => c.slug === "thu")
+    ? categoryHref("thu")
+    : "/san-pham";
+
+  const searchButtonClasses =
+    "rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta";
+  const accountLinkClasses =
+    "inline-flex items-center p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta";
+
   return (
-    <header id="top" className="bg-paper">
-      {/* Tầng 1 — dải tiện ích (chỉ desktop): tài khoản / quản trị /
-          giỏ hàng, căn phải. Tagline chỉ còn ở dưới wordmark để
-          không trùng lặp. */}
-      <div className="hidden border-b border-line md:block">
-        <Container>
-          <div className="flex items-center justify-end py-2 text-[13px] text-muted">
-            <div className="flex items-center gap-5">
-              <HeaderSearch />
-              {isAdmin && (
+    <>
+      {/* Dải thông báo kiểu HUSH: xanh nhạt, chữ căn giữa, nút X bên
+          phải; KHÔNG dính — cuộn xuống là trôi đi. Chỉ đóng trong
+          phiên hiện tại (state, không localStorage) nên tải lại trang
+          là hiện lại. */}
+      {announcementVisible && (
+        <div className="bg-[#cfe6f0] text-ink">
+          <Container>
+            <div className="relative flex items-center justify-center py-2.5 text-center">
+              <p className="px-10 text-[13px] md:text-sm">
+                Mới về | Bộ sưu tập Thu |{" "}
                 <Link
-                  href="/admin"
-                  aria-label="Quản trị — mở Dashboard admin"
-                  className="inline-flex items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+                  href={thuHref}
+                  className="font-semibold underline underline-offset-4 transition duration-state ease-standard hover:text-cta"
                 >
-                  <LayoutDashboard className="h-4 w-4" aria-hidden />
-                  Quản trị
+                  Mua ngay
                 </Link>
-              )}
+              </p>
+              <button
+                type="button"
+                aria-label="Đóng thông báo"
+                onClick={() => setAnnouncementVisible(false)}
+                className="absolute top-1/2 right-0 -translate-y-1/2 rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          </Container>
+        </div>
+      )}
+
+      {/* Hàng header duy nhất, DÍNH THẬT: là con trực tiếp của khung
+          layout cao toàn trang nên sticky top-0 có cả trang để dính
+          (không bị nhốt trong <header> ngắn như bản cũ). Nền trắng,
+          cuộn quá ngưỡng thì mờ + blur + bóng nhẹ. */}
+      <div
+        className={`sticky top-0 z-50 border-b border-line motion-safe:transition-[background-color,box-shadow,backdrop-filter] motion-safe:duration-300 motion-safe:ease-standard ${
+          scrolled
+            ? "bg-white/85 shadow-[0_2px_16px_rgba(0,0,0,0.06)] backdrop-blur-md"
+            : "bg-white"
+        }`}
+      >
+        <Container>
+          {/* Hàng desktop (lg+): nav trái, wordmark giữa, icon phải.
+              Grid 1fr/auto/1fr giữ wordmark đúng chính giữa; chiều
+              cao cố định để morph chữ không làm trang nhảy. */}
+          <div className="hidden h-[76px] grid-cols-[1fr_auto_1fr] lg:grid">
+            <nav aria-label="Điều hướng chính" className="flex items-stretch">
+              <ul className="flex items-stretch">
+                {mainNav.map((item) =>
+                  item.href === "/san-pham" ? (
+                    <ProductsDropdown
+                      key={item.href}
+                      categories={categories}
+                      pathname={pathname}
+                    />
+                  ) : (
+                    <li key={item.href} className="flex items-stretch">
+                      <NavLink
+                        href={item.href}
+                        label={item.label}
+                        active={isActive(pathname, item.href)}
+                      />
+                    </li>
+                  ),
+                )}
+              </ul>
+            </nav>
+            <div className="flex items-center justify-center">
+              <Wordmark
+                scrolled={scrolled}
+                mobile={false}
+                onBrandClick={handleBrandClick}
+                bursts={bursts}
+                onBurstDone={removeBurst}
+              />
+            </div>
+            <div className="flex items-center justify-end gap-1">
+              <button
+                type="button"
+                aria-label="Tìm kiếm sản phẩm"
+                onClick={() => setSearchOpen(true)}
+                className={searchButtonClasses}
+              >
+                <Search className="h-5 w-5" aria-hidden />
+              </button>
               <Link
                 href={accountHref}
                 title={sessionUser ? sessionUser.email : undefined}
@@ -343,13 +624,56 @@ function HeaderInner() {
                     ? `Tài khoản của ${sessionUser.name || sessionUser.email}`
                     : "Tài khoản — đăng nhập"
                 }
-                className="inline-flex max-w-56 items-center gap-1.5 font-medium text-ink transition hover:text-cta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+                className={accountLinkClasses}
               >
-                <User className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="truncate">{accountLabel}</span>
+                <User className="h-5 w-5" aria-hidden />
+                <span className="sr-only">{accountLabel}</span>
               </Link>
               <CartButton
-                showLabel
+                totalQuantity={totalQuantity}
+                showBadge={showBadge}
+              />
+            </div>
+          </div>
+
+          {/* Hàng mobile (< lg): hamburger trái, wordmark giữa (nhỏ
+              hơn, cũng morph khi cuộn), tìm kiếm + giỏ phải. */}
+          <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center lg:hidden">
+            <div className="flex items-center">
+              <button
+                type="button"
+                className="rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+                aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
+                onClick={() => setMobileOpen((open) => !open)}
+              >
+                {mobileOpen ? (
+                  <X className="h-6 w-6" aria-hidden />
+                ) : (
+                  <MenuIcon className="h-6 w-6" aria-hidden />
+                )}
+              </button>
+            </div>
+            <div className="flex items-center justify-center">
+              <Wordmark
+                scrolled={scrolled}
+                mobile
+                onBrandClick={handleBrandClick}
+                bursts={bursts}
+                onBurstDone={removeBurst}
+              />
+            </div>
+            <div className="flex items-center justify-end gap-1">
+              <button
+                type="button"
+                aria-label="Tìm kiếm sản phẩm"
+                onClick={() => setSearchOpen(true)}
+                className={searchButtonClasses}
+              >
+                <Search className="h-5 w-5" aria-hidden />
+              </button>
+              <CartButton
                 totalQuantity={totalQuantity}
                 showBadge={showBadge}
               />
@@ -358,127 +682,91 @@ function HeaderInner() {
         </Container>
       </div>
 
-      {/* Tầng 2 — masthead: wordmark serif căn giữa, viền đôi kiểu tạp
-          chí ở dưới. Mobile: nút menu trái, giỏ hàng phải, wordmark giữa. */}
-      <div className="border-b-[3px] border-double border-line">
-        <Container>
-          <div className="relative flex flex-col items-center py-6 md:py-8">
-            <button
-              type="button"
-              className="absolute top-1/2 left-0 -translate-y-1/2 rounded-[2px] p-2 text-ink transition duration-state ease-standard active:scale-95 hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta md:hidden"
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-nav"
-              aria-label={mobileOpen ? "Đóng menu" : "Mở menu"}
-              onClick={() => setMobileOpen((open) => !open)}
-            >
-              {mobileOpen ? (
-                <X className="h-6 w-6" aria-hidden />
-              ) : (
-                <MenuIcon className="h-6 w-6" aria-hidden />
-              )}
-            </button>
-            <span className="group relative inline-block">
-              <Link
-                href="/"
-                onClick={handleBrandClick}
-                aria-label={`${shopConfig.name} — Trang chủ`}
-                className="font-display text-center text-4xl leading-none font-semibold tracking-tight whitespace-nowrap text-ink motion-safe:transition-[letter-spacing] motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:tracking-wide md:text-6xl"
-              >
-                {/* Wordmark wrapper owns the underline: previously the
-                    sweep was positioned against the inline <a>, whose
-                    box follows the font content box (Playfair overflows
-                    its 60px line box), so the line landed on the tagline
-                    below. This inline-block wrapper's box is exactly the
-                    wordmark line box, so the line now sits under the
-                    glyphs only — clear of the tagline. */}
-                <span className="relative inline-block leading-none">
-                  Happier Fashion
-                  <span
-                    aria-hidden
-                    className="absolute -bottom-2.5 left-0 h-px w-full origin-left scale-x-0 bg-ink motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-standard [@media(hover:hover)]:group-hover:scale-x-100"
-                  />
-                </span>
-              </Link>
-              {bursts.map((burst) => (
-                <BrandSplash
-                  key={burst.id}
-                  burst={burst}
-                  onDone={removeBurst}
-                />
-              ))}
-            </span>
-            <p className="mt-3 text-center text-xs font-medium tracking-[0.25em] text-muted uppercase">
-              {shopConfig.tagline}
-            </p>
-            <div className="absolute top-1/2 right-0 -translate-y-1/2 md:hidden">
-              <CartButton
-                showLabel={false}
-                totalQuantity={totalQuantity}
-                showBadge={showBadge}
-              />
-            </div>
-          </div>
-        </Container>
-      </div>
-
-      {/* Tầng 3 — hàng điều hướng dính (chỉ desktop): các mục căn giữa,
-          ngăn cách nhau bằng vạch hairline dọc. */}
-      <div
-        className={`sticky top-0 z-50 hidden border-b border-line motion-safe:transition-[background-color,box-shadow,backdrop-filter] motion-safe:duration-300 motion-safe:ease-standard md:block ${
-          navScrolled
-            ? "bg-white/75 shadow-[0_2px_16px_rgba(0,0,0,0.06)] backdrop-blur-md"
-            : "bg-paper"
-        }`}
-      >
-        <Container>
-          <nav aria-label="Điều hướng chính">
-            <ul className="flex items-center justify-center">
-              {mainNav.map((item, index) => (
-                <li key={item.href} className="flex items-center">
-                  {index > 0 && (
-                    <span aria-hidden className="h-4 w-px bg-line" />
-                  )}
-                  <NavLink
-                    href={item.href}
-                    label={item.label}
-                    active={isActive(pathname, item.href)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </Container>
-      </div>
-
-      {/* Menu mobile */}
+      {/* Menu mobile: các mục nav + accordion "Sản phẩm" (Tất cả sản
+          phẩm + danh mục) + tài khoản + quản trị (chỉ admin). */}
       {mobileOpen && (
         <nav
           id="mobile-nav"
           aria-label="Điều hướng chính trên di động"
-          className="border-b border-line bg-paper md:hidden"
+          className="border-b border-line bg-paper lg:hidden"
         >
           <Container>
-            <form
-              action="/san-pham"
-              method="get"
-              role="search"
-              className="flex gap-2 px-3 pt-3 pb-1"
-            >
-              <input
-                type="search"
-                name="q"
-                placeholder="Tìm sản phẩm…"
-                aria-label="Tìm kiếm sản phẩm"
-                className="min-w-0 flex-1 rounded-[2px] border border-line bg-paper px-3 py-2.5 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-              />
-              <button
-                type="submit"
-                className="rounded-[2px] bg-ink px-4 py-2.5 text-base font-medium text-paper transition duration-state ease-standard active:scale-95 hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta"
-              >
-                Tìm
-              </button>
-            </form>
             <ul className="flex flex-col py-2">
+              {mainNav.map((item) =>
+                item.href === "/san-pham" ? (
+                  <li key={item.href}>
+                    <button
+                      type="button"
+                      aria-expanded={mobileProductsOpen}
+                      onClick={() =>
+                        setMobileProductsOpen((open) => !open)
+                      }
+                      className={`flex w-full items-center justify-between rounded-[2px] px-3 py-3 text-base transition duration-state ease-standard active:bg-line/60 ${
+                        isActive(pathname, item.href)
+                          ? "bg-ink/5 font-semibold text-ink"
+                          : "text-muted hover:bg-line/50 hover:text-ink"
+                      }`}
+                    >
+                      <span
+                        className={
+                          isActive(pathname, item.href)
+                            ? "underline decoration-ink decoration-2 underline-offset-8"
+                            : undefined
+                        }
+                      >
+                        Sản phẩm
+                      </span>
+                      <ChevronDown
+                        className={`h-5 w-5 transition-transform duration-state ${
+                          mobileProductsOpen ? "rotate-180" : ""
+                        }`}
+                        aria-hidden
+                      />
+                    </button>
+                    {mobileProductsOpen && (
+                      <ul className="pb-1 pl-4">
+                        <li>
+                          <Link
+                            href="/san-pham"
+                            onClick={() => setMobileOpen(false)}
+                            className="block rounded-[2px] px-3 py-2.5 text-[15px] font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
+                          >
+                            Tất cả sản phẩm
+                          </Link>
+                        </li>
+                        {categories.map((category) => (
+                          <li key={category.slug}>
+                            <Link
+                              href={categoryHref(category.slug)}
+                              onClick={() => setMobileOpen(false)}
+                              className="block rounded-[2px] px-3 py-2.5 text-[15px] text-muted transition duration-state ease-standard active:bg-line/60 hover:bg-line/50 hover:text-ink"
+                            >
+                              {category.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ) : (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      aria-current={
+                        isActive(pathname, item.href) ? "page" : undefined
+                      }
+                      className={`block rounded-[2px] px-3 py-3 text-base transition duration-state ease-standard active:bg-line/60 ${
+                        isActive(pathname, item.href)
+                          ? "bg-ink/5 font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
+                          : "text-muted hover:bg-line/50 hover:text-ink"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ),
+              )}
               {isAdmin && (
                 <li>
                   <Link
@@ -486,29 +774,10 @@ function HeaderInner() {
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-2 rounded-[2px] px-3 py-3 text-base font-medium text-ink transition duration-state ease-standard active:bg-line/60 hover:bg-line/50"
                   >
-                    <LayoutDashboard className="h-5 w-5" aria-hidden />
                     Quản trị — Dashboard
                   </Link>
                 </li>
               )}
-              {mainNav.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    aria-current={
-                      isActive(pathname, item.href) ? "page" : undefined
-                    }
-                    className={`block rounded-[2px] px-3 py-3 text-base transition duration-state ease-standard active:bg-line/60 ${
-                      isActive(pathname, item.href)
-                        ? "bg-ink/5 font-semibold text-ink underline decoration-ink decoration-2 underline-offset-8"
-                        : "text-muted hover:bg-line/50 hover:text-ink"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
               <li>
                 <Link
                   href={accountHref}
@@ -523,17 +792,27 @@ function HeaderInner() {
           </Container>
         </nav>
       )}
-    </header>
+
+      <SearchOverlay
+        open={searchOpen}
+        onClose={closeSearch}
+        categories={categories}
+      />
+    </>
   );
 }
 
 // Wrapper ngoài: provider phải bao quanh HeaderInner thì hook
 // useSessionInfo() bên trong mới đọc được phiên thật (hook gọi ở
 // component cha của provider sẽ chỉ thấy giá trị mặc định).
-export default function Header() {
+export default function Header({
+  categories,
+}: {
+  categories: HeaderCategory[];
+}) {
   return (
     <SessionProvider>
-      <HeaderInner />
+      <HeaderInner categories={categories} />
     </SessionProvider>
   );
 }
