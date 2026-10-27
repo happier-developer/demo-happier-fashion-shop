@@ -79,6 +79,15 @@
       transform: scale(1);
     }
   }
+
+  @keyframes footer-shine {
+    from {
+      transform: translateX(-160%) skewX(-20deg);
+    }
+    to {
+      transform: translateX(480%) skewX(-20deg);
+    }
+  }
 }
 
 /* Utility duration theo token (Tailwind v4 không tự sinh duration-*
@@ -267,6 +276,35 @@ body {
     color 300ms ease-out;
 }
 
+/* Wordmark footer: dải sáng quét ngang khi hover/focus-visible.
+   Chỉ dùng transform/opacity trên pseudo-element tuyệt đối nên không
+   đổi font-size hay letter-spacing, không làm footer nhảy layout.
+   Trạng thái nghỉ: dải nằm ngoài khung (không thấy gì) nên chữ trắng
+   giữ nguyên; khi hover/focus-visible, dải chạy một chiều từ trái
+   sang phải rồi dừng ngoài khung bên phải (không quét ngược khi rời
+   chuột). Animation chỉ chạy khi motion-safe (xem media query dưới,
+   cộng thêm khối prefers-reduced-motion toàn cục ở trên). */
+.footer-wordmark-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.footer-wordmark-shine::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 35%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  transform: translateX(-160%) skewX(-20deg);
+  pointer-events: none;
+}
+
 @media (hover: hover) {
   /* Thẻ sản phẩm: nâng nhẹ; nút xem nhanh hiện mờ dần. */
   .product-card:hover {
@@ -307,6 +345,22 @@ body {
   .footer-index-link:hover .footer-index-label {
     text-decoration: underline;
     text-underline-offset: 4px;
+  }
+
+  /* Wordmark footer: dải sáng quét một chiều khi hover; chỉ chạy
+     trên thiết bị hover được (tránh hover dính trên cảm ứng). */
+  .footer-wordmark-shine:hover::after {
+    animation: footer-shine 900ms ease-out forwards;
+  }
+}
+
+/* Wordmark footer: cùng dải sáng khi focus bàn phím — dùng
+   :focus-within vì dải nằm ở lớp bọc ngoài Link (Link giữ nguyên để
+   không cắt chân chữ và không cắt giọt splash); vẫn chỉ chạy khi
+   không giảm chuyển động. */
+@media (prefers-reduced-motion: no-preference) {
+  .footer-wordmark-shine:focus-within::after {
+    animation: footer-shine 900ms ease-out forwards;
   }
 }
 
