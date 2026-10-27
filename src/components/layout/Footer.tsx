@@ -215,14 +215,21 @@ export default function Footer() {
         {/* Wordmark khổ lớn + viền đôi — mở đầu footer như trang bìa. */}
         <div className="border-b-[3px] border-double border-white/20 pb-8">
           <span className="relative inline-block">
-            <Link
-              href="/"
-              onClick={handleBrandClick}
-              aria-label={`${shopConfig.name} — Trang chủ`}
-              className="font-display text-5xl leading-none font-semibold tracking-tight text-white md:text-7xl"
-            >
-              Happier Fashion
-            </Link>
+            {/* Lớp bọc riêng cho dải sáng: Link giữ nguyên class (không
+                overflow-hidden) để chân chữ 'p' ở leading-none không bị
+                cắt, còn giọt splash khi bấm vẫn là sibling của lớp bọc
+                nên không bị cắt theo. Hover/focus vào Link vẫn kích
+                hoạt :hover/:focus-within của lớp bọc. */}
+            <span className="footer-wordmark-shine relative inline-block overflow-hidden">
+              <Link
+                href="/"
+                onClick={handleBrandClick}
+                aria-label={`${shopConfig.name} — Trang chủ`}
+                className="font-display text-5xl leading-none font-semibold tracking-tight text-white md:text-7xl"
+              >
+                Happier Fashion
+              </Link>
+            </span>
             {bursts.map((burst) => (
               <BrandSplash
                 key={burst.id}
